@@ -1,12 +1,14 @@
 export { DataGrid } from "./data-grid";
-export { ThemeProvider, useTheme } from "./theme-provider";
-export type {
-  ColumnDef,
-  DataGridProps,
-  SortDirection,
-  FilterValue,
-  RowSelectionState,
-  VisibleColumnState,
-  ColumnOrderState,
-  ThemeProviderContext,
-} from "./types";
+export { FilterMenu } from "./filter-menu";
+export { Pagination } from "./pagination";
+export { TableBody } from "./table-body";
+export { TableCell } from "./table-cell";
+export { TableHeader } from "./table-header";
+export { TableRow } from "./table-row";
+export { useColumnResize } from "./use-column-resize";
+export { useFiltering } from "./use-filtering";
+export { usePagination } from "./use-pagination";
+export { useRowSelection } from "./use-row-selection";
+export { useSorting } from "./use-sorting";
+export { useGridPersistence } from "./use-grid-persistence";
+export * from "./types";
