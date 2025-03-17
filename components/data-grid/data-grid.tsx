@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ColumnDef, DataGridProps } from "./types";
+import {
+  ColumnDef,
+  DataGridProps as BaseDataGridProps,
+  DataGridRenderProps,
+  FilterMenuCustomization,
+  SortState,
+} from "./types";
 import { TableHeader } from "./table-header";
 import { TableBody } from "./table-body";
 import { Pagination } from "./pagination";
@@ -10,11 +16,40 @@ import { ColumnManager } from "./column-manager";
 import { useTheme } from "../theme-provider/theme-provider";
 import { useGridPersistence } from "./use-grid-persistence";
 
-// Controlled version that receives all state from parent
+// Extended DataGridProps with column manager and pagination customization options
+export interface DataGridProps<T> extends BaseDataGridProps<T> {
+  // Add column manager customization
+  columnManagerProps?: Partial<
+    Omit<
+      React.ComponentProps<typeof ColumnManager<T>>,
+      | "columns"
+      | "visibleColumns"
+      | "toggleColumnVisibility"
+      | "resetGridPreferences"
+    >
+  >;
+
+  // Add pagination customization
+  paginationProps?: Partial<
+    Omit<
+      React.ComponentProps<typeof Pagination>,
+      | "pageIndex"
+      | "pageCount"
+      | "pageSize"
+      | "setPageIndex"
+      | "setPageSize"
+      | "pageSizeOptions"
+      | "processedDataLength"
+    >
+  >;
+}
+
 export function DataGrid<T>({
+  // Data props
   columns,
   data,
-  sortState,
+  // State props
+  sortState = null,
   onSortChange,
   filterState,
   onFilterChange,
@@ -26,21 +61,39 @@ export function DataGrid<T>({
   onPageChange,
   onPageSizeChange,
   onRowClick,
+
+  // Feature flags
   enableSorting = true,
   enableColumnResize = true,
   enableRowSelection = false,
   enablePagination = true,
+
+  // Configuration props
   pageSizeOptions = [5, 10, 20, 50, 100],
-  className,
-  rowClassName,
-  headerClassName,
-  cellClassName,
-  selectedRowClassName = "bg-primary/10",
   emptyMessage = "No data available",
   loadingMessage = "Loading data...",
   isLoading = false,
   gridId = "default",
-}: DataGridProps<T> & { gridId?: string }) {
+
+  // Styling props - consolidated into classes object
+  classes = {},
+  className, // Keep this for backward compatibility
+
+  // Render customization props
+  renderCell,
+  renderSortIcon,
+  renderFilterIcon,
+  sortIconVariant = "arrows",
+
+  // New customization props
+  columnManagerProps = {},
+  paginationProps = {},
+
+  // Render props
+  children,
+  filterMenu,
+  renderHeader,
+}: DataGridProps<T>) {
   const { theme } = useTheme();
   const filterValueRefs = useRef<Record<string, string>>(filterState || {});
   const [filterMenuOpen, setFilterMenuOpen] = useState<string | null>(null);
@@ -165,19 +218,39 @@ export function DataGrid<T>({
     resetPreferences();
   };
 
+  // Create render props object for children function
+  const renderProps: DataGridRenderProps<T> = {
+    filterState: filterState || {},
+    sortState,
+    selectedRows: selectedRows || {},
+    data,
+    visibleColumns,
+    pageIndex,
+    pageCount,
+    pageSize,
+    isLoading,
+  };
+
   // Render empty state
   if (!isLoading && (!data || data.length === 0)) {
     return (
       <div
         className={cn(
           "w-full border rounded-md overflow-hidden",
-          theme.container,
-          className
+          theme.classes.container,
+          className,
+          classes.container
         )}
       >
-        <div className="p-4 text-center text-muted-foreground">
+        <div
+          className={cn(
+            "p-4 text-center text-muted-foreground",
+            classes.emptyState
+          )}
+        >
           {emptyMessage}
         </div>
+        {children && children(renderProps)}
       </div>
     );
   }
@@ -188,13 +261,20 @@ export function DataGrid<T>({
       <div
         className={cn(
           "w-full border rounded-md overflow-hidden",
-          theme.container,
-          className
+          theme.classes.container,
+          className,
+          classes.container
         )}
       >
-        <div className="p-4 text-center text-muted-foreground">
+        <div
+          className={cn(
+            "p-4 text-center text-muted-foreground",
+            classes.loadingState
+          )}
+        >
           {loadingMessage}
         </div>
+        {children && children(renderProps)}
       </div>
     );
   }
@@ -203,16 +283,23 @@ export function DataGrid<T>({
     <div
       className={cn(
         "w-full border rounded-md overflow-hidden",
-        theme.container,
-        className
+        theme.classes.container,
+        className,
+        classes.container
       )}
     >
-      <div className="p-2 flex items-center justify-end border-b">
+      <div
+        className={cn(
+          "p-2 flex items-center justify-end border-b",
+          classes.columnManager
+        )}
+      >
         <ColumnManager
           columns={columns}
           visibleColumns={visibleColumns}
           toggleColumnVisibility={handleToggleColumnVisibility}
           resetGridPreferences={handleResetGridPreferences}
+          {...columnManagerProps}
         />
       </div>
       <div className="w-full overflow-auto">
@@ -236,11 +323,37 @@ export function DataGrid<T>({
             onFilterMenuToggle={handleFilterMenuToggle}
             columnWidths={preferences.columnWidths}
             onColumnResize={handleColumnResize}
-            headerClassName={headerClassName}
+            headerClassName={classes.header}
             filterValueRefs={filterValueRefs}
             onApplyFilter={handleApplyFilter}
             onClearFilter={handleClearFilter}
             onColumnReorder={handleColumnReorder}
+            renderHeader={
+              renderHeader
+                ? (column, direction) =>
+                    renderHeader({
+                      column,
+                      sortDirection: direction || undefined,
+                    })
+                : undefined
+            }
+            renderSortIcon={
+              renderSortIcon
+                ? (column, sortDirection) =>
+                    renderSortIcon({
+                      isSorted: !!sortDirection,
+                      sortDirection: sortDirection || undefined,
+                    })
+                : undefined
+            }
+            sortIconVariant={sortIconVariant}
+            renderFilterIcon={
+              renderFilterIcon
+                ? (column, isActive) =>
+                    renderFilterIcon({ isFiltered: !!filterState?.[column.id] })
+                : undefined
+            }
+            filterMenu={filterMenu as FilterMenuCustomization | undefined}
           />
           <TableBody
             paginatedData={data}
@@ -255,26 +368,42 @@ export function DataGrid<T>({
               }
             }}
             onRowClick={onRowClick}
-            rowClassName={rowClassName}
-            cellClassName={cellClassName}
+            rowClassName={classes.row}
+            cellClassName={classes.cell}
             columnWidths={preferences.columnWidths}
             theme={theme}
-            selectedRowClassName={selectedRowClassName}
+            selectedRowClassName={classes.selectedRow || "bg-primary/10"}
+            renderCell={
+              renderCell
+                ? (row, column) =>
+                    renderCell({
+                      value: (row as Record<string, any>)[column.id],
+                      row,
+                      column,
+                    })
+                : undefined
+            }
           />
         </table>
       </div>
 
       {enablePagination && (
-        <Pagination
-          pageIndex={pageIndex}
-          pageCount={pageCount}
-          pageSize={pageSize}
-          setPageIndex={onPageChange}
-          setPageSize={onPageSizeChange}
-          pageSizeOptions={pageSizeOptions}
-          processedDataLength={data.length}
-        />
+        <div className={cn(classes.pagination)}>
+          <Pagination
+            pageIndex={pageIndex}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            setPageIndex={onPageChange || (() => {})}
+            setPageSize={onPageSizeChange || (() => {})}
+            pageSizeOptions={pageSizeOptions}
+            processedDataLength={data.length}
+            {...paginationProps}
+          />
+        </div>
       )}
+
+      {/* Render children with all the internal state */}
+      {children && children(renderProps)}
     </div>
   );
 }

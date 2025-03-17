@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ColumnDef, RowSelectionState } from "./types";
 
@@ -14,6 +14,7 @@ interface TableBodyProps<T> {
   columnWidths: Record<string, number>;
   theme: any;
   selectedRowClassName?: string;
+  renderCell?: (row: T, column: ColumnDef<T>) => ReactNode;
 }
 
 export const TableBody = <T,>({
@@ -28,6 +29,7 @@ export const TableBody = <T,>({
   columnWidths,
   theme,
   selectedRowClassName,
+  renderCell,
 }: TableBodyProps<T>) => {
   return (
     <tbody>
@@ -39,9 +41,8 @@ export const TableBody = <T,>({
           <tr
             key={rowId}
             className={cn(
-              theme.row,
-              "hover:bg-muted/50 transition-colors",
-              isSelected && selectedRowClassName,
+              theme.classes.row, // Access using theme.classes.row
+              isSelected && (selectedRowClassName || "bg-primary/10"),
               rowClassName
             )}
             onClick={() => {
@@ -63,8 +64,7 @@ export const TableBody = <T,>({
                 <td
                   key={`${rowId}-${column.id}`}
                   className={cn(
-                    "p-2 border-b",
-                    theme.cell,
+                    theme.classes.cell, // Access using theme.classes.cell
                     column.cellClassName,
                     cellClassName
                   )}
@@ -74,7 +74,11 @@ export const TableBody = <T,>({
                     maxWidth: width + "px",
                   }}
                 >
-                  {column.cell ? column.cell(row) : (row as any)[column.id]}
+                  {renderCell
+                    ? renderCell(row, column)
+                    : column.cell
+                    ? column.cell(row)
+                    : (row as any)[column.id]}
                 </td>
               );
             })}
