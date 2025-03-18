@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import {
   ColumnDef,
   SortState,
-  DataGridRenderProps,
   GroupingState,
   FilterMenuCustomization,
   DataGridProps as BaseDataGridProps,
@@ -18,6 +17,7 @@ import { GroupManager } from "./group-manager";
 import { useGridPersistence } from "./use-grid-persistence";
 import { useDataGrouping } from "./use-data-grouping";
 import { useTheme } from "../theme-provider/theme-provider";
+import { useSelectCell } from "./use-select-cell";
 
 export interface DataGridProps<T> extends BaseDataGridProps<T> {
   columnManagerProps?: Partial<
@@ -114,6 +114,11 @@ export function DataGrid<T>({
   groupCollapseIcon,
   totalRows,
   filterMenu,
+  selectedCell: propSelectedCell,
+  enableCellSelection = false,
+  onCellSelect,
+  preventRowSelection,
+  contextMenuContent,
 }: DataGridProps<T>) {
   const { theme } = useTheme();
   const filterValueRefs = useRef<Record<string, string>>(filterState || {});
@@ -132,6 +137,18 @@ export function DataGrid<T>({
     toggleGroupExpanded,
     resetPreferences,
   } = useGridPersistence(gridId, columns);
+
+  const { selectedCell, selectCell, clearSelection, isCellSelected } =
+    useSelectCell();
+
+  const handleCellSelect = (rowId: string, columnId: string) => {
+    if (enableCellSelection) {
+      selectCell(rowId, columnId);
+      if (onCellSelect) {
+        onCellSelect(rowId, columnId);
+      }
+    }
+  };
 
   // Initialize internal grouping state
   const [internalGroupingState, setInternalGroupingState] =
@@ -484,6 +501,9 @@ export function DataGrid<T>({
             columns={orderedColumns}
             selectedRows={selectedRows || {}}
             enableRowSelection={enableRowSelection}
+            selectedCell={selectedCell}
+            onCellSelect={enableCellSelection ? handleCellSelect : undefined}
+            selectedCellClassName={classes.selectedCell}
             onRowSelect={(rowId) => {
               if (enableRowSelection && onRowSelectionChange) {
                 const newSelectedRows = { ...selectedRows };
@@ -514,6 +534,8 @@ export function DataGrid<T>({
             groupExpandIcon={groupExpandIcon}
             groupCollapseIcon={groupCollapseIcon}
             groupRowProps={groupRowProps}
+            preventRowSelection={preventRowSelection}
+            contextMenuContent={contextMenuContent}
           />
         </table>
       </div>

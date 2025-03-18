@@ -1,17 +1,14 @@
-import React, { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import {
-  ColumnDef,
-  RowSelectionState,
-  GroupingState,
-  GroupRowRenderProps,
-} from "./types";
+import React from "react";
+import { ColumnDef } from "./types";
 import { GroupRow } from "./group-row";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { CellPosition } from "./use-select-cell";
+import { TableRow } from "./table-row";
 
 interface TableBodyProps<T> {
   paginatedData: any[]; // Use any[] to accommodate both T and group rows
   columns: ColumnDef<T>[];
-  selectedRows: RowSelectionState;
+  selectedRows: Record<string, boolean>;
   enableRowSelection: boolean;
   onRowSelect: (rowId: string) => void;
   onRowClick?: (row: T) => void;
@@ -20,29 +17,24 @@ interface TableBodyProps<T> {
   columnWidths: Record<string, number>;
   theme: any;
   selectedRowClassName?: string;
-  renderCell?: (row: T, column: ColumnDef<T>) => ReactNode;
-
-  // Group-related props
+  renderCell?: (row: T, column: ColumnDef<T>) => React.ReactNode;
   enableGrouping?: boolean;
-  groupingState?: GroupingState;
-  toggleGroupExpanded?: (groupKey: string, expanded?: boolean) => void;
-  renderGroupRow?: (props: GroupRowRenderProps) => React.ReactNode;
+  groupingState?: {
+    groupByColumns: string[];
+    expandedGroups: Record<string, boolean>;
+  };
+  toggleGroupExpanded?: (groupKey: string) => void;
+  renderGroupRow?: (props: any) => React.ReactNode;
   groupExpandIcon?: React.ReactNode;
   groupCollapseIcon?: React.ReactNode;
-  groupRowProps?: {
-    className?: string;
-    rowClassName?: string;
-    cellClassName?: string;
-    contentClassName?: string;
-    labelClassName?: string;
-    iconClassName?: string;
-    countClassName?: string;
-    indentSize?: number;
-    style?: React.CSSProperties;
-    rowStyle?: React.CSSProperties;
-    cellStyle?: React.CSSProperties;
-    contentStyle?: React.CSSProperties;
-  };
+  groupRowProps?: Record<string, any>;
+
+  // Cell selection props
+  selectedCell?: CellPosition | null;
+  onCellSelect?: (rowId: string, columnId: string) => void;
+  selectedCellClassName?: string;
+  preventRowSelection?: boolean;
+  contextMenuContent?: (row: T, column: ColumnDef<T>) => React.ReactNode;
 }
 
 export const TableBody = <T,>({
@@ -57,100 +49,66 @@ export const TableBody = <T,>({
   columnWidths,
   theme,
   selectedRowClassName,
-  renderCell,
-
-  // Group-related props
   enableGrouping = false,
   groupingState,
   toggleGroupExpanded,
   renderGroupRow,
-  groupExpandIcon,
-  groupCollapseIcon,
+  groupExpandIcon = <ChevronDown className="h-4 w-4" />,
+  groupCollapseIcon = <ChevronRight className="h-4 w-4" />,
   groupRowProps = {},
+  selectedCell = null,
+  onCellSelect,
+  selectedCellClassName = "ring-2 ring-primary ring-inset",
+  preventRowSelection,
+  contextMenuContent,
 }: TableBodyProps<T>) => {
   return (
-    <tbody>
+    <tbody className={theme.classes.tbody}>
       {paginatedData.map((row: any, rowIndex) => {
-        // Handle group rows
         if (enableGrouping && row.isGroupRow) {
-          const isExpanded = !!groupingState?.expandedGroups?.[row.groupKey];
-
           return (
             <GroupRow
               key={row.groupKey}
-              groupKey={row.groupKey}
               columnId={row.columnId}
               value={row.groupValue}
               depth={row.depth}
-              isExpanded={isExpanded}
-              onToggleExpand={() => {
-                if (toggleGroupExpanded) {
-                  toggleGroupExpanded(row.groupKey, !isExpanded);
-                }
-              }}
+              isExpanded={groupingState?.expandedGroups[row.groupKey] || false}
+              onToggleExpand={() => toggleGroupExpanded?.(row.groupKey)}
               count={row.count}
               columns={columns.length}
-              formatter={
-                columns.find((col) => col.id === row.columnId)?.groupFormatter
-              }
-              renderGroupRow={renderGroupRow}
+              groupKey={row.groupKey}
               expandIcon={groupExpandIcon}
               collapseIcon={groupCollapseIcon}
+              renderGroupRow={renderGroupRow}
               {...groupRowProps}
             />
           );
         }
 
-        // Regular row handling
         const rowId = row.id || `row-${rowIndex}`;
         const isSelected = selectedRows[rowId];
 
         return (
-          <tr
+          <TableRow
             key={rowId}
-            className={cn(
-              theme.classes.row,
-              isSelected && (selectedRowClassName || "bg-primary/10"),
-              rowClassName
-            )}
-            onClick={() => {
-              if (enableRowSelection) {
-                onRowSelect(rowId);
-              }
-              if (onRowClick) {
-                onRowClick(row);
-              }
-            }}
-            style={{
-              cursor: enableRowSelection || onRowClick ? "pointer" : "default",
-            }}
-          >
-            {columns.map((column) => {
-              const width = columnWidths[column.id] || column.width || 150;
-
-              return (
-                <td
-                  key={`${rowId}-${column.id}`}
-                  className={cn(
-                    theme.classes.cell,
-                    column.cellClassName,
-                    cellClassName
-                  )}
-                  style={{
-                    width: width + "px",
-                    minWidth: width + "px",
-                    maxWidth: width + "px",
-                  }}
-                >
-                  {renderCell
-                    ? renderCell(row, column)
-                    : column.cell
-                    ? column.cell(row)
-                    : row[column.id]}
-                </td>
-              );
-            })}
-          </tr>
+            row={row}
+            rowId={rowId}
+            columns={columns}
+            isSelected={isSelected}
+            onRowSelect={
+              enableRowSelection ? () => onRowSelect(rowId) : undefined
+            }
+            onRowClick={onRowClick}
+            selectedRowClassName={selectedRowClassName}
+            rowClassName={rowClassName}
+            cellClassName={cellClassName}
+            columnWidths={columnWidths}
+            selectedCell={selectedCell}
+            onCellSelect={onCellSelect}
+            selectedCellClassName={selectedCellClassName}
+            preventRowSelection={preventRowSelection}
+            contextMenuContent={contextMenuContent}
+          />
         );
       })}
     </tbody>

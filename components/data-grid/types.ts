@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { CellPosition } from "./use-select-cell";
 
 export type SortDirection = "asc" | "desc" | null;
 
@@ -14,8 +15,9 @@ export interface ColumnDef<T> {
   headerClassName?: string;
   cellClassName?: string;
   filterMenuPosition?: { top: number; left: number };
+  renderCell?: (row: T) => React.ReactNode;
   cell?: (row: T) => React.ReactNode;
-  index: number;
+  index?: number;
   groupFormatter?: (value: any) => string;
   enableGrouping?: boolean;
 }
@@ -49,6 +51,8 @@ export interface ThemeProviderContextType {
 }
 
 export interface DataGridRenderProps<T> {
+  renderCell: ((row: T, column: ColumnDef<T>) => ReactNode) | undefined;
+  renderGroupRow: ((props: any) => ReactNode) | undefined;
   filterState: Record<string, string>;
   sortState?: SortState | null;
   selectedRows: Record<string, boolean>;
@@ -61,6 +65,13 @@ export interface DataGridRenderProps<T> {
 }
 
 export interface DataGridClasses {
+  footer(arg0: string, footer: any): unknown;
+  toolbarTop(arg0: string, toolbarTop: any): unknown;
+  selectedCell: string | undefined;
+  paginationButton: string | undefined;
+  paginationButtons: string | undefined;
+  pageInfo: string | undefined;
+  pageSize: string | undefined;
   container?: string;
   header?: string;
   headerCell?: string;
@@ -110,6 +121,10 @@ export interface DataGridProps<T> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRowClick?: (row: T) => void;
+  enableCellSelection?: boolean;
+  onCellSelect?: (rowId: string, columnId: string) => void;
+  selectedCell?: CellPosition | null;
+  selectedCellClassName?: string;
 
   // Feature flags
   enableFiltering?: boolean;
@@ -130,6 +145,7 @@ export interface DataGridProps<T> {
 
   // Styling props
   classes?: {
+    selectedCell?: string;
     container?: string;
     columnManager?: string;
     header?: string;
@@ -175,6 +191,8 @@ export interface DataGridProps<T> {
   renderGroupRow?: (props: GroupRowRenderProps) => React.ReactNode;
   groupExpandIcon?: React.ReactNode;
   groupCollapseIcon?: React.ReactNode;
+  preventRowSelection?: boolean;
+  contextMenuContent?: (row: T, column: ColumnDef<T>) => React.ReactNode;
 }
 
 export interface FilterMenuCustomization {

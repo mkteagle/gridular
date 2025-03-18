@@ -1,60 +1,95 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ColumnDef } from "./types";
+import { TableCell } from "./table-cell";
+import { CellPosition } from "./use-select-cell";
 
 interface TableRowProps<T> {
   row: T;
   columns: ColumnDef<T>[];
-  onRowClick?: (row: T) => void;
+  rowId: string;
   isSelected: boolean;
-  onSelect: () => void;
+  onRowSelect?: () => void;
+  onRowClick?: (row: T) => void;
   selectedRowClassName?: string;
   rowClassName?: string;
+  cellClassName?: string;
+  columnWidths: Record<string, number>;
+  // Cell selection props
+  selectedCell?: CellPosition | null;
+  onCellSelect?: (rowId: string, columnId: string) => void;
+  selectedCellClassName?: string;
+  preventRowSelection?: boolean;
+  contextMenuContent?: (row: T, column: ColumnDef<T>) => React.ReactNode;
 }
 
 export function TableRow<T>({
   row,
   columns,
-  onRowClick,
+  rowId,
   isSelected,
-  onSelect,
+  onRowSelect,
+  onRowClick,
   selectedRowClassName,
   rowClassName,
+  cellClassName,
+  columnWidths,
+  selectedCell,
+  onCellSelect,
+  selectedCellClassName,
+  preventRowSelection,
+  contextMenuContent,
 }: TableRowProps<T>) {
-  const rowId = (row as any).id || `row-${Math.random()}`;
-
   return (
     <tr
-      key={rowId}
       className={cn(
         "hover:bg-muted/50 transition-colors",
         isSelected && selectedRowClassName,
         rowClassName
       )}
       onClick={() => {
-        if (onSelect) {
-          onSelect();
+        if (onRowSelect) {
+          onRowSelect();
         }
         if (onRowClick) {
           onRowClick(row);
         }
       }}
       style={{
-        cursor: onRowClick ? "pointer" : "default",
+        cursor: onRowSelect || onRowClick ? "pointer" : "default",
       }}
     >
-      {columns.map((column) => (
-        <td
-          key={`${rowId}-${column.id}`}
-          className={cn("p-2 border-b", column.cellClassName)}
-          style={{
-            width: column.width || 150,
-            maxWidth: column.width || 150,
-          }}
-        >
-          {column.cell ? column.cell(row) : (row as any)[column.id]}
-        </td>
-      ))}
+      {columns.map((column) => {
+        const isCellSelected =
+          selectedCell &&
+          selectedCell.rowId === rowId &&
+          selectedCell.columnId === column.id;
+
+        return (
+          <TableCell
+            key={`${rowId}-${column.id}`}
+            column={{
+              ...column,
+              width: columnWidths[column.id] || column.width,
+            }}
+            row={row}
+            cellClassName={cellClassName}
+            isSelected={!!isCellSelected}
+            selectedCellClassName={selectedCellClassName}
+            onSelect={(selected) => {
+              if (onCellSelect) {
+                if (selected) {
+                  onCellSelect(rowId, column.id);
+                } else {
+                  onCellSelect("", ""); // Clear selection
+                }
+              }
+            }}
+            preventRowSelection={preventRowSelection}
+            contextMenuContent={contextMenuContent}
+          />
+        );
+      })}
     </tr>
   );
 }
