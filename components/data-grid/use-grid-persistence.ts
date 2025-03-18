@@ -4,6 +4,8 @@ export interface GridPreferences {
   columnWidths: Record<string, number>;
   columnOrder: string[];
   hiddenColumns: string[];
+  groupByColumns: string[]; // Add this
+  expandedGroups: Record<string, boolean>; // Add this
 }
 
 export function useGridPersistence(
@@ -21,6 +23,8 @@ export function useGridPersistence(
     }, {} as Record<string, number>),
     columnOrder: columns.map((col) => col.id),
     hiddenColumns: [],
+    groupByColumns: [], // Initialize with empty array
+    expandedGroups: {}, // Initialize with empty object
   });
 
   // Load preferences from localStorage
@@ -34,7 +38,12 @@ export function useGridPersistence(
       const parsed = JSON.parse(stored) as GridPreferences;
 
       // Ensure all columns exist in the preferences
-      const updated = { ...parsed };
+      const updated = {
+        ...parsed,
+        // Ensure these fields exist
+        groupByColumns: parsed.groupByColumns || [],
+        expandedGroups: parsed.expandedGroups || {},
+      };
 
       // Add any new columns that don't exist in saved preferences
       columns.forEach((col) => {
@@ -53,6 +62,7 @@ export function useGridPersistence(
     }
   };
 
+  // Rest of the code...
   const [preferences, setPreferences] = useState<GridPreferences>(
     getDefaultPreferences()
   );
@@ -112,6 +122,24 @@ export function useGridPersistence(
     });
   };
 
+  // Add new grouping methods
+  const updateGroupByColumns = (groupByColumns: string[]) => {
+    savePreferences({
+      ...preferences,
+      groupByColumns,
+    });
+  };
+
+  const toggleGroupExpanded = (groupKey: string, expanded: boolean) => {
+    savePreferences({
+      ...preferences,
+      expandedGroups: {
+        ...preferences.expandedGroups,
+        [groupKey]: expanded,
+      },
+    });
+  };
+
   // Reset preferences to defaults
   const resetPreferences = () => {
     savePreferences(getDefaultPreferences());
@@ -122,6 +150,8 @@ export function useGridPersistence(
     updateColumnWidth,
     updateColumnOrder,
     toggleColumnVisibility,
+    updateGroupByColumns,
+    toggleGroupExpanded,
     resetPreferences,
   };
 }

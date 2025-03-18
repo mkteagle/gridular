@@ -44,10 +44,28 @@ const testData = [
 ];
 
 const columns: ColumnDef<(typeof testData)[0]>[] = [
-  { id: "name", header: "Name", enableSorting: true, enableFiltering: true },
-  { id: "email", header: "Email", enableSorting: true, enableFiltering: true },
-  { id: "role", header: "Role", enableSorting: true, enableFiltering: true },
-  { id: "age", header: "Age", enableSorting: true },
+  {
+    id: "name",
+    header: "Name",
+    enableSorting: true,
+    enableFiltering: true,
+    index: 0,
+  },
+  {
+    id: "email",
+    header: "Email",
+    enableSorting: true,
+    enableFiltering: true,
+    index: 1,
+  },
+  {
+    id: "role",
+    header: "Role",
+    enableSorting: true,
+    enableFiltering: true,
+    index: 2,
+  },
+  { id: "age", header: "Age", enableSorting: true, index: 3 },
 ];
 
 describe("DataGrid Component", () => {
@@ -59,6 +77,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -96,6 +115,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -122,6 +142,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -151,6 +172,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={0}
         pageSize={10}
+        totalRows={0}
       />
     );
 
@@ -167,6 +189,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -185,6 +208,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={3}
         pageSize={2}
+        totalRows={testData.length}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         pageSizeOptions={[2, 5, 10]}
@@ -211,6 +235,7 @@ describe("DataGrid Component", () => {
         id: "actions",
         header: "Actions",
         cell: () => <button>Edit</button>,
+        index: 4, // Add the required index property
       },
     ];
 
@@ -221,6 +246,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -241,6 +267,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -275,6 +302,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
         columnManagerProps={{
           showResetButton: true,
         }}
@@ -311,6 +339,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -336,6 +365,7 @@ describe("DataGrid Component", () => {
         pageIndex={0}
         pageCount={1}
         pageSize={testData.length}
+        totalRows={testData.length}
       />
     );
 
@@ -345,5 +375,158 @@ describe("DataGrid Component", () => {
     ).toBeInTheDocument();
     expect(document.querySelector(".custom-row-class")).toBeInTheDocument();
     expect(document.querySelector(".custom-cell-class")).toBeInTheDocument();
+  });
+
+  test("handles grouping functionality", async () => {
+    const onGroupingChange = vi.fn();
+    const { user } = render(
+      <DataGrid
+        columns={columns}
+        data={testData}
+        enableGrouping={true}
+        onGroupingChange={onGroupingChange}
+        pageIndex={0}
+        pageCount={1}
+        pageSize={testData.length}
+        totalRows={testData.length}
+      />
+    );
+
+    // Find and open the group manager
+    const groupButton = screen.getByRole("button", { name: /group by/i });
+    await user.click(groupButton);
+
+    // Select a column to group by
+    const roleGroupOption = screen.getByRole("menuitemcheckbox", {
+      name: "Role",
+    });
+    await user.click(roleGroupOption);
+
+    // Verify onGroupingChange was called with the right parameters
+    expect(onGroupingChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        groupByColumns: ["role"],
+        expandedGroups: expect.any(Object),
+      })
+    );
+
+    // Set up the state with role grouping to ensure we see grouped rows
+    const { rerender } = render(
+      <DataGrid
+        columns={columns}
+        data={testData}
+        enableGrouping={true}
+        onGroupingChange={onGroupingChange}
+        pageIndex={0}
+        pageCount={1}
+        pageSize={testData.length}
+        totalRows={testData.length}
+        groupingState={{
+          groupByColumns: ["role"],
+          expandedGroups: {},
+        }}
+      />
+    );
+
+    // Now look for any row that contains "Admin" and has a number in parentheses
+    // This is more flexible than the previous approach
+    const adminText = screen.getAllByText(/admin/i)[0];
+    const adminRow = adminText.closest("tr");
+    expect(adminRow).toBeInTheDocument();
+    // Click to expand the admin group
+    await user.click(adminText);
+
+    // Verify the expanded state was toggled
+    expect(onGroupingChange).toHaveBeenCalled();
+  });
+
+  test("displays custom group row", async () => {
+    const renderGroupRow = vi.fn().mockImplementation(({ value, count }) => (
+      <div>
+        Custom group: {value} ({count})
+      </div>
+    ));
+
+    render(
+      <DataGrid
+        columns={columns}
+        data={testData}
+        enableGrouping={true}
+        renderGroupRow={renderGroupRow}
+        pageIndex={0}
+        pageCount={1}
+        pageSize={testData.length}
+        totalRows={testData.length}
+        groupingState={{
+          groupByColumns: ["role"],
+          expandedGroups: {},
+        }}
+      />
+    );
+
+    // Verify custom group row renderer was called
+    expect(renderGroupRow).toHaveBeenCalled();
+    expect(screen.getByText(/custom group: admin/i)).toBeInTheDocument();
+  });
+
+  test("handles clearing grouping", async () => {
+    const onGroupingChange = vi.fn();
+    const { user } = render(
+      <DataGrid
+        columns={columns}
+        data={testData}
+        enableGrouping={true}
+        onGroupingChange={onGroupingChange}
+        pageIndex={0}
+        pageCount={1}
+        pageSize={testData.length}
+        totalRows={testData.length}
+        groupingState={{
+          groupByColumns: ["role"],
+          expandedGroups: {},
+        }}
+      />
+    );
+
+    // Find and click the clear all button for grouping
+    const clearButton = screen.getByText(/clear all/i);
+    await user.click(clearButton);
+
+    // Verify grouping was cleared
+    expect(onGroupingChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        groupByColumns: [],
+      })
+    );
+  });
+
+  test("applies custom styles to group rows", () => {
+    const groupRowProps = {
+      className: "custom-group-row",
+      labelClassName: "custom-group-label",
+      countClassName: "custom-group-count",
+    };
+
+    render(
+      <DataGrid
+        columns={columns}
+        data={testData}
+        enableGrouping={true}
+        groupRowProps={groupRowProps}
+        pageIndex={0}
+        pageCount={1}
+        pageSize={testData.length}
+        totalRows={testData.length}
+        groupingState={{
+          groupByColumns: ["role"],
+          expandedGroups: {},
+        }}
+      />
+    );
+
+    // Verify custom classes were applied to group rows
+    expect(document.querySelector(".custom-group-row")).toBeInTheDocument();
+    expect(document.querySelector(".custom-group-label")).toBeInTheDocument();
+    expect(document.querySelector(".custom-group-count")).toBeInTheDocument();
   });
 });

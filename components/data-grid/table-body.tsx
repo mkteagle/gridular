@@ -1,9 +1,15 @@
 import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ColumnDef, RowSelectionState } from "./types";
+import {
+  ColumnDef,
+  RowSelectionState,
+  GroupingState,
+  GroupRowRenderProps,
+} from "./types";
+import { GroupRow } from "./group-row";
 
 interface TableBodyProps<T> {
-  paginatedData: T[];
+  paginatedData: any[]; // Use any[] to accommodate both T and group rows
   columns: ColumnDef<T>[];
   selectedRows: RowSelectionState;
   enableRowSelection: boolean;
@@ -15,6 +21,28 @@ interface TableBodyProps<T> {
   theme: any;
   selectedRowClassName?: string;
   renderCell?: (row: T, column: ColumnDef<T>) => ReactNode;
+
+  // Group-related props
+  enableGrouping?: boolean;
+  groupingState?: GroupingState;
+  toggleGroupExpanded?: (groupKey: string, expanded?: boolean) => void;
+  renderGroupRow?: (props: GroupRowRenderProps) => React.ReactNode;
+  groupExpandIcon?: React.ReactNode;
+  groupCollapseIcon?: React.ReactNode;
+  groupRowProps?: {
+    className?: string;
+    rowClassName?: string;
+    cellClassName?: string;
+    contentClassName?: string;
+    labelClassName?: string;
+    iconClassName?: string;
+    countClassName?: string;
+    indentSize?: number;
+    style?: React.CSSProperties;
+    rowStyle?: React.CSSProperties;
+    cellStyle?: React.CSSProperties;
+    contentStyle?: React.CSSProperties;
+  };
 }
 
 export const TableBody = <T,>({
@@ -30,18 +58,58 @@ export const TableBody = <T,>({
   theme,
   selectedRowClassName,
   renderCell,
+
+  // Group-related props
+  enableGrouping = false,
+  groupingState,
+  toggleGroupExpanded,
+  renderGroupRow,
+  groupExpandIcon,
+  groupCollapseIcon,
+  groupRowProps = {},
 }: TableBodyProps<T>) => {
   return (
     <tbody>
-      {paginatedData.map((row, rowIndex) => {
-        const rowId = (row as any).id || `row-${rowIndex}`;
+      {paginatedData.map((row: any, rowIndex) => {
+        // Handle group rows
+        if (enableGrouping && row.isGroupRow) {
+          const isExpanded = !!groupingState?.expandedGroups?.[row.groupKey];
+
+          return (
+            <GroupRow
+              key={row.groupKey}
+              groupKey={row.groupKey}
+              columnId={row.columnId}
+              value={row.groupValue}
+              depth={row.depth}
+              isExpanded={isExpanded}
+              onToggleExpand={() => {
+                if (toggleGroupExpanded) {
+                  toggleGroupExpanded(row.groupKey, !isExpanded);
+                }
+              }}
+              count={row.count}
+              columns={columns.length}
+              formatter={
+                columns.find((col) => col.id === row.columnId)?.groupFormatter
+              }
+              renderGroupRow={renderGroupRow}
+              expandIcon={groupExpandIcon}
+              collapseIcon={groupCollapseIcon}
+              {...groupRowProps}
+            />
+          );
+        }
+
+        // Regular row handling
+        const rowId = row.id || `row-${rowIndex}`;
         const isSelected = selectedRows[rowId];
 
         return (
           <tr
             key={rowId}
             className={cn(
-              theme.classes.row, // Access using theme.classes.row
+              theme.classes.row,
               isSelected && (selectedRowClassName || "bg-primary/10"),
               rowClassName
             )}
@@ -64,7 +132,7 @@ export const TableBody = <T,>({
                 <td
                   key={`${rowId}-${column.id}`}
                   className={cn(
-                    theme.classes.cell, // Access using theme.classes.cell
+                    theme.classes.cell,
                     column.cellClassName,
                     cellClassName
                   )}
@@ -78,7 +146,7 @@ export const TableBody = <T,>({
                     ? renderCell(row, column)
                     : column.cell
                     ? column.cell(row)
-                    : (row as any)[column.id]}
+                    : row[column.id]}
                 </td>
               );
             })}

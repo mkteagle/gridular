@@ -26,6 +26,7 @@ export const Default: Story = {
   args: {
     pageIndex: 0,
     pageCount: 10,
+    totalRows: 50,
     pageSize: 10,
     setPageIndex: (index) => {
       console.log(`Set page index to ${index}`);

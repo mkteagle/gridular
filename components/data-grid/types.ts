@@ -16,6 +16,8 @@ export interface ColumnDef<T> {
   filterMenuPosition?: { top: number; left: number };
   cell?: (row: T) => React.ReactNode;
   index: number;
+  groupFormatter?: (value: any) => string;
+  enableGrouping?: boolean;
 }
 
 export type FilterValue = string | null;
@@ -76,6 +78,20 @@ export interface SortState {
   direction: "asc" | "desc";
 }
 
+export interface GroupingState {
+  groupByColumns: string[];
+  expandedGroups: Record<string, boolean>;
+}
+
+// Add grouping to GridPreferences
+export interface GridPreferences {
+  columnWidths: Record<string, number>;
+  columnOrder: string[];
+  hiddenColumns: string[];
+  groupByColumns: string[]; // Add this
+  expandedGroups: Record<string, boolean>; // Add this
+}
+
 export interface DataGridProps<T> {
   // Data props
   columns: ColumnDef<T>[];
@@ -96,10 +112,13 @@ export interface DataGridProps<T> {
   onRowClick?: (row: T) => void;
 
   // Feature flags
+  enableFiltering?: boolean;
   enableSorting?: boolean;
   enableColumnResize?: boolean;
   enableRowSelection?: boolean;
   enablePagination?: boolean;
+  hideGroupControls?: boolean;
+  hideColumnManager?: boolean;
 
   // Configuration props
   pageSizeOptions?: number[];
@@ -120,6 +139,10 @@ export interface DataGridProps<T> {
     pagination?: string;
     emptyState?: string;
     loadingState?: string;
+    toolbar?: string;
+    loadingContainer?: string;
+    emptyContainer?: string;
+    errorContainer?: string;
   };
   className?: string;
 
@@ -131,11 +154,11 @@ export interface DataGridProps<T> {
   }) => React.ReactNode;
   renderHeader?: (props: {
     column: ColumnDef<T>;
-    sortDirection?: "asc" | "desc";
+    sortDirection?: SortDirection;
   }) => React.ReactNode;
   renderSortIcon?: (props: {
     isSorted: boolean;
-    sortDirection?: "asc" | "desc";
+    sortDirection?: SortDirection;
   }) => React.ReactNode;
   renderFilterIcon?: (props: { isFiltered: boolean }) => React.ReactNode;
   sortIconVariant?: "arrows" | "chevrons";
@@ -143,6 +166,15 @@ export interface DataGridProps<T> {
   // Render function
   children?: (props: DataGridRenderProps<T>) => React.ReactNode;
   filterMenu?: React.ReactNode;
+
+  // Grouping props
+  groupingState?: GroupingState;
+  onGroupingChange?: (groupingState: GroupingState) => void;
+  enableGrouping?: boolean;
+  defaultGroupTemplate?: string;
+  renderGroupRow?: (props: GroupRowRenderProps) => React.ReactNode;
+  groupExpandIcon?: React.ReactNode;
+  groupCollapseIcon?: React.ReactNode;
 }
 
 export interface FilterMenuCustomization {
@@ -177,4 +209,14 @@ export interface FilterMenuCustomization {
     onClear: () => void;
     isActive: boolean;
   }) => ReactNode;
+}
+
+export interface GroupRowRenderProps {
+  groupKey: string;
+  columnId: string;
+  value: any;
+  depth: number;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  count: number;
 }
