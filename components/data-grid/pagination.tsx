@@ -5,6 +5,7 @@ interface PaginationProps {
   pageIndex: number;
   pageCount: number;
   pageSize: number;
+  totalRows: number;
   setPageIndex: (index: number) => void;
   setPageSize: (size: number) => void;
   pageSizeOptions: number[];
@@ -50,6 +51,7 @@ export const Pagination = ({
   pageIndex,
   pageCount,
   pageSize,
+  totalRows,
   setPageIndex,
   setPageSize,
   pageSizeOptions,
@@ -71,7 +73,7 @@ export const Pagination = ({
   buttonClassName,
 }: PaginationProps) => {
   const start = processedDataLength === 0 ? 0 : pageIndex * pageSize + 1;
-  const end = Math.min((pageIndex + 1) * pageSize, processedDataLength);
+  const end = Math.min((pageIndex + 1) * pageSize, totalRows);
   const isFirstPage = pageIndex === 0;
   const isLastPage = pageIndex >= pageCount - 1;
 
@@ -117,14 +119,16 @@ export const Pagination = ({
         </div>
       )}
 
-      <div className={cn("flex items-center", buttonsClassName)}>
+      <div
+        className={cn("flex items-center justify-between", buttonsClassName)}
+      >
         {showPageInfo && (
           <div className={cn("mr-2", pageInfoClassName)}>
             {renderPageInfo ? (
-              renderPageInfo({ start, end, total: processedDataLength })
+              renderPageInfo({ start, end, total: totalRows })
             ) : (
               <span className="text-sm text-muted-foreground">
-                {start}-{end} of {processedDataLength}
+                {start}-{end} of {totalRows}
               </span>
             )}
           </div>

@@ -15,6 +15,7 @@ export interface ColumnDef<T> {
   cellClassName?: string;
   filterMenuPosition?: { top: number; left: number };
   cell?: (row: T) => React.ReactNode;
+  index: number;
 }
 
 export type FilterValue = string | null;
@@ -106,6 +107,7 @@ export interface DataGridProps<T> {
   loadingMessage?: string;
   isLoading?: boolean;
   gridId?: string;
+  totalRows: number;
 
   // Styling props
   classes?: {

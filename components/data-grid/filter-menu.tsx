@@ -49,6 +49,7 @@ interface FilterMenuProps extends FilterMenuRenderProps {
   trigger: React.ReactNode;
   isActive?: boolean;
   classes?: FilterMenuClasses;
+  totalColumns?: number;
 }
 
 export const FilterMenu = ({
@@ -67,16 +68,16 @@ export const FilterMenu = ({
   renderInput,
   renderButtons,
   renderCustomContent,
+  totalColumns = 1,
 }: FilterMenuProps) => {
-  const [localFilterValue, setLocalFilterValue] = useState(filterValue);
   const { theme } = useTheme();
+  const [localFilterValue, setLocalFilterValue] = useState(filterValue);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
-  // Reset local state when external value changes
   useEffect(() => {
     setLocalFilterValue(filterValue);
   }, [filterValue]);
 
-  // Update local state when menu opens with current filter value
   useEffect(() => {
     if (isOpen) {
       setLocalFilterValue(filterValue);
@@ -84,13 +85,11 @@ export const FilterMenu = ({
   }, [isOpen, filterValue]);
 
   const handleApplyFilter = () => {
-    // Update the parent's filter value ref for this column
     setFilterValue(localFilterValue);
-    // Apply the filter (this will update the filter state)
     onApplyFilter(localFilterValue);
-    // Close the menu
     onOpenChange(false);
   };
+
   const handleClearFilter = () => {
     setLocalFilterValue("");
     onClearFilter();
@@ -105,7 +104,6 @@ export const FilterMenu = ({
     }
   };
 
-  // If not open, just render the trigger
   if (!isOpen) {
     return (
       <div className="relative">
@@ -119,144 +117,152 @@ export const FilterMenu = ({
     );
   }
 
-  // If we have custom content, render that
-  if (renderCustomContent) {
-    return (
+  const menuContent = (
+    <div className={cn("p-3", theme.classes.filterMenuContent)}>
       <div
         className={cn(
-          "absolute z-50 mt-1 min-w-[200px]",
-          theme.classes.filterMenu,
-          classes.container
+          "font-medium mb-2",
+          theme.classes.filterMenuHeader,
+          classes.header
         )}
       >
-        {renderCustomContent({
-          column,
-          filterValue: localFilterValue,
-          setFilterValue: setLocalFilterValue,
-          onApply: handleApplyFilter,
-          onClear: handleClearFilter,
-          isActive,
-        })}
+        {renderHeader ? (
+          renderHeader(column, isActive)
+        ) : (
+          <div className="flex items-center justify-between">
+            <span>Filter: {column.header}</span>
+            {isActive && (
+              <span
+                className={cn(
+                  "ml-2 text-xs px-1 rounded bg-primary/20 text-primary",
+                  classes.activeIndicator
+                )}
+              >
+                Active
+              </span>
+            )}
+          </div>
+        )}
       </div>
-    );
-  }
 
-  // Otherwise render the default filter menu
-  return (
-    <div
-      className={cn(
-        "absolute z-50 mt-1 min-w-[200px]",
-        theme.classes.filterMenu,
-        classes.container
-      )}
-    >
-      <div className={cn("p-3", theme.classes.filterMenuContent)}>
-        {/* Header */}
-        <div
-          className={cn(
-            "font-medium mb-2",
-            theme.classes.filterMenuHeader,
-            classes.header
-          )}
-        >
-          {renderHeader ? (
-            renderHeader(column, isActive)
+      {isActive && filterValue && (
+        <div className="mb-2">
+          {renderCurrentFilter ? (
+            renderCurrentFilter(filterValue)
           ) : (
-            <div className="flex items-center justify-between">
-              <span>Filter: {column.header}</span>
-              {isActive && (
-                <span
-                  className={cn(
-                    "ml-2 text-xs px-1 rounded bg-primary/20 text-primary",
-                    classes.activeIndicator
-                  )}
-                >
-                  Active
-                </span>
+            <div
+              className={cn(
+                "text-xs bg-muted p-1 rounded",
+                classes.currentFilter
               )}
+            >
+              Current filter: <strong>{filterValue}</strong>
             </div>
           )}
         </div>
+      )}
 
-        {/* Current filter display */}
-        {isActive && filterValue && (
-          <div className="mb-2">
-            {renderCurrentFilter ? (
-              renderCurrentFilter(filterValue)
-            ) : (
-              <div
-                className={cn(
-                  "text-xs bg-muted p-1 rounded",
-                  classes.currentFilter
-                )}
-              >
-                Current filter: <strong>{filterValue}</strong>
-              </div>
-            )}
-          </div>
-        )}
+      {renderInput ? (
+        renderInput({
+          value: localFilterValue,
+          onChange: setLocalFilterValue,
+          onKeyDown: handleKeyDown,
+          isActive,
+        })
+      ) : (
+        <input
+          type="text"
+          value={localFilterValue}
+          onChange={(e) => setLocalFilterValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className={cn(
+            "w-full p-2 border rounded-md",
+            theme.classes.filterMenuInput,
+            classes.input
+          )}
+          placeholder="Filter value..."
+          autoFocus
+        />
+      )}
 
-        {/* Input */}
-        {renderInput ? (
-          renderInput({
-            value: localFilterValue,
-            onChange: setLocalFilterValue,
-            onKeyDown: handleKeyDown,
-            isActive,
-          })
-        ) : (
-          <input
-            type="text"
-            value={localFilterValue}
-            onChange={(e) => setLocalFilterValue(e.target.value)}
-            onKeyDown={handleKeyDown}
+      {renderButtons ? (
+        renderButtons({
+          onClear: handleClearFilter,
+          onApply: handleApplyFilter,
+          isActive,
+        })
+      ) : (
+        <div
+          className={cn(
+            "flex justify-between mt-2 gap-2",
+            classes.buttonContainer
+          )}
+        >
+          <button
+            onClick={handleClearFilter}
             className={cn(
-              "w-full p-2 border rounded-md",
-              theme.classes.filterMenuInput,
-              classes.input
-            )}
-            placeholder="Filter value..."
-            autoFocus
-          />
-        )}
-
-        {/* Buttons */}
-        {renderButtons ? (
-          renderButtons({
-            onClear: handleClearFilter,
-            onApply: handleApplyFilter,
-            isActive,
-          })
-        ) : (
-          <div
-            className={cn(
-              "flex justify-between mt-2 gap-2",
-              classes.buttonContainer
+              "px-3 py-1 text-sm rounded-md border",
+              theme.classes.filterMenuClearButton,
+              classes.clearButton
             )}
           >
-            <button
-              onClick={handleClearFilter}
-              className={cn(
-                "px-3 py-1 text-sm rounded-md border",
-                theme.classes.filterMenuClearButton,
-                classes.clearButton
-              )}
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleApplyFilter}
-              className={cn(
-                "px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md",
-                theme.classes.filterMenuApplyButton,
-                classes.applyButton
-              )}
-            >
-              Apply
-            </button>
-          </div>
-        )}
-      </div>
+            Clear
+          </button>
+          <button
+            onClick={handleApplyFilter}
+            className={cn(
+              "px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md",
+              theme.classes.filterMenuApplyButton,
+              classes.applyButton
+            )}
+          >
+            Apply
+          </button>
+        </div>
+      )}
     </div>
+  );
+
+  if (renderCustomContent) {
+    return (
+      <>
+        <div>{trigger}</div>
+        <div
+          ref={menuRef}
+          className={cn(
+            "absolute top-full left-0 z-50 mt-1 min-w-[200px] bg-popover border rounded-md shadow-md",
+            theme.classes.filterMenu,
+            classes.container,
+            column.index === totalColumns - 1 && "right-0 left-auto"
+          )}
+        >
+          {renderCustomContent({
+            column,
+            filterValue: localFilterValue,
+            setFilterValue: setLocalFilterValue,
+            onApply: handleApplyFilter,
+            onClear: handleClearFilter,
+            isActive,
+          })}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div>{trigger}</div>
+      <div
+        ref={menuRef}
+        className={cn(
+          "absolute top-full left-0 z-50 mt-1 min-w-[200px] bg-popover border rounded-md shadow-md",
+          theme.classes.filterMenu,
+          classes.container,
+          column.index === totalColumns - 1 && "right-0 left-auto"
+        )}
+      >
+        {menuContent}
+      </div>
+    </>
   );
 };

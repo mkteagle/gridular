@@ -18,6 +18,15 @@
   color: #1e293b !important;
 }
 
+/* Fix for descriptions in light mode */
+.light .docblock-argstable-body tr td:nth-child(2) {
+  color: #1e293b !important;
+}
+
+.light .docblock-argstable-body tr td:nth-child(2) span {
+  color: #1e293b !important;
+}
+
 .light .sbdocs h1,
 .light .sbdocs h2,
 .light .sbdocs h3,

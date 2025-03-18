@@ -1,13 +1,11 @@
 "use client";
-
-import React, { useMemo, useRef, useState, useEffect, ReactNode } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   ColumnDef,
   DataGridProps as BaseDataGridProps,
   DataGridRenderProps,
   FilterMenuCustomization,
-  SortState,
 } from "./types";
 import { TableHeader } from "./table-header";
 import { TableBody } from "./table-body";
@@ -16,9 +14,7 @@ import { ColumnManager } from "./column-manager";
 import { useTheme } from "../theme-provider/theme-provider";
 import { useGridPersistence } from "./use-grid-persistence";
 
-// Extended DataGridProps with column manager and pagination customization options
 export interface DataGridProps<T> extends BaseDataGridProps<T> {
-  // Add column manager customization
   columnManagerProps?: Partial<
     Omit<
       React.ComponentProps<typeof ColumnManager<T>>,
@@ -28,8 +24,6 @@ export interface DataGridProps<T> extends BaseDataGridProps<T> {
       | "resetGridPreferences"
     >
   >;
-
-  // Add pagination customization
   paginationProps?: Partial<
     Omit<
       React.ComponentProps<typeof Pagination>,
@@ -40,15 +34,14 @@ export interface DataGridProps<T> extends BaseDataGridProps<T> {
       | "setPageSize"
       | "pageSizeOptions"
       | "processedDataLength"
+      | "totalRows"
     >
   >;
 }
 
 export function DataGrid<T>({
-  // Data props
   columns,
   data,
-  // State props
   sortState = null,
   onSortChange,
   filterState,
@@ -61,35 +54,24 @@ export function DataGrid<T>({
   onPageChange,
   onPageSizeChange,
   onRowClick,
-
-  // Feature flags
   enableSorting = true,
   enableColumnResize = true,
   enableRowSelection = false,
-  enablePagination = true,
-
-  // Configuration props
+  enablePagination = false,
   pageSizeOptions = [5, 10, 20, 50, 100],
   emptyMessage = "No data available",
   loadingMessage = "Loading data...",
   isLoading = false,
   gridId = "default",
-
-  // Styling props - consolidated into classes object
   classes = {},
-  className, // Keep this for backward compatibility
-
-  // Render customization props
+  className,
   renderCell,
   renderSortIcon,
   renderFilterIcon,
   sortIconVariant = "arrows",
-
-  // New customization props
   columnManagerProps = {},
   paginationProps = {},
-
-  // Render props
+  totalRows,
   children,
   filterMenu,
   renderHeader,
@@ -99,8 +81,8 @@ export function DataGrid<T>({
   const [filterMenuOpen, setFilterMenuOpen] = useState<string | null>(null);
   const [activeFilterColumn, setActiveFilterColumn] =
     useState<ColumnDef<T> | null>(null);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
 
-  // Use our grid persistence hook for column preferences
   const {
     preferences,
     updateColumnWidth,
@@ -109,21 +91,17 @@ export function DataGrid<T>({
     resetPreferences,
   } = useGridPersistence(gridId, columns);
 
-  // Calculate visible columns based on preferences
   const visibleColumns = useMemo(() => {
     const hiddenIds = new Set(preferences.hiddenColumns);
 
-    // Filter by visibility
     const visible = columns
       .filter((col) => !hiddenIds.has(col.id))
       .map((col) => col.id);
 
-    // Get and apply the saved order for visible columns
     const orderedIds = preferences.columnOrder.filter((id) =>
       visible.includes(id)
     );
 
-    // Add any new columns that aren't in the saved order
     visible.forEach((id) => {
       if (!orderedIds.includes(id)) {
         orderedIds.push(id);
@@ -133,20 +111,35 @@ export function DataGrid<T>({
     return orderedIds;
   }, [columns, preferences.hiddenColumns, preferences.columnOrder]);
 
-  // Get filtered columns in the correct order
   const orderedColumns = useMemo(() => {
     const colMap = new Map(columns.map((col) => [col.id, col]));
     return visibleColumns.map((id) => colMap.get(id)!).filter(Boolean);
   }, [columns, visibleColumns]);
 
-  // Update filter refs when filter state changes
   useEffect(() => {
     if (filterState) {
       filterValueRefs.current = { ...filterState };
     }
   }, [filterState]);
 
-  // Handle filter menu toggling
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(event.target as Node) &&
+        filterMenuOpen
+      ) {
+        setFilterMenuOpen(null);
+        setActiveFilterColumn(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [filterMenuOpen]);
+
   const handleFilterMenuToggle = (columnId: string | null) => {
     if (columnId === filterMenuOpen) {
       setFilterMenuOpen(null);
@@ -163,7 +156,6 @@ export function DataGrid<T>({
     }
   };
 
-  // Pass filter actions up to parent
   const handleApplyFilter = (value: string) => {
     if (!activeFilterColumn || !onFilterChange) return;
 
@@ -188,7 +180,6 @@ export function DataGrid<T>({
     setFilterMenuOpen(null);
   };
 
-  // Handle column reordering
   const handleColumnReorder = (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;
 
@@ -203,22 +194,18 @@ export function DataGrid<T>({
     }
   };
 
-  // Handle column resizing
   const handleColumnResize = (columnId: string, width: number) => {
     updateColumnWidth(columnId, width);
   };
 
-  // Handle column visibility toggle
   const handleToggleColumnVisibility = (columnId: string, visible: boolean) => {
     toggleColumnVisibility(columnId, visible);
   };
 
-  // Handle reset of all grid preferences
   const handleResetGridPreferences = () => {
     resetPreferences();
   };
 
-  // Create render props object for children function
   const renderProps: DataGridRenderProps<T> = {
     filterState: filterState || {},
     sortState,
@@ -231,7 +218,6 @@ export function DataGrid<T>({
     isLoading,
   };
 
-  // Render empty state
   if (!isLoading && (!data || data.length === 0)) {
     return (
       <div
@@ -255,7 +241,6 @@ export function DataGrid<T>({
     );
   }
 
-  // Render loading state
   if (isLoading) {
     return (
       <div
@@ -305,6 +290,7 @@ export function DataGrid<T>({
       <div className="w-full overflow-auto">
         <table className="w-full border-collapse">
           <TableHeader
+            filterMenuRef={filterMenuRef}
             columns={orderedColumns}
             sortState={sortState}
             onSortChange={(columnId) => {
@@ -387,7 +373,7 @@ export function DataGrid<T>({
         </table>
       </div>
 
-      {enablePagination && (
+      {enablePagination ? (
         <div className={cn(classes.pagination)}>
           <Pagination
             pageIndex={pageIndex}
@@ -397,12 +383,11 @@ export function DataGrid<T>({
             setPageSize={onPageSizeChange || (() => {})}
             pageSizeOptions={pageSizeOptions}
             processedDataLength={data.length}
+            totalRows={totalRows}
             {...paginationProps}
           />
         </div>
-      )}
-
-      {/* Render children with all the internal state */}
+      ) : null}
       {children && children(renderProps)}
     </div>
   );

@@ -37,6 +37,7 @@ export interface TableHeaderProps<T> {
   renderFilterIcon?: (column: ColumnDef<T>, isActive: boolean) => ReactNode;
   sortIconVariant?: "arrows" | "chevrons" | "none";
   filterMenu?: FilterMenuCustomization;
+  filterMenuRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function TableHeader<T>({
@@ -59,6 +60,7 @@ export function TableHeader<T>({
   renderFilterIcon,
   sortIconVariant = "arrows",
   filterMenu,
+  filterMenuRef,
 }: TableHeaderProps<T>) {
   const { theme } = useTheme();
   // State for drag handling
@@ -168,7 +170,8 @@ export function TableHeader<T>({
   return (
     <thead>
       <tr className={cn(theme.classes.header, headerClassName)}>
-        {columns.map((column) => {
+        {columns.map((column, index) => {
+          column = { ...column, index };
           // Get sort direction for this column
           const sortDirection =
             sortState && sortState.column === column.id
@@ -238,9 +241,13 @@ export function TableHeader<T>({
                 </div>
 
                 {column.enableFiltering !== false && (
-                  <div className="flex items-center">
+                  <div
+                    className="flex items-center"
+                    ref={filterMenuOpen === column.id ? filterMenuRef : null}
+                  >
                     <FilterMenu
-                      column={column}
+                      column={{ ...column, index }}
+                      totalColumns={columns.length}
                       filterValue={filterValueRefs.current[column.id] || ""}
                       setFilterValue={(value) => {
                         filterValueRefs.current[column.id] = value;

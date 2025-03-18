@@ -33,17 +33,38 @@ export const columns: ColumnDef<DataRow>[] = [
     id: "id",
     header: "ID",
     width: 80,
+    index: 0,
   },
   {
     id: "name",
     header: "Name",
     enableSorting: true,
     enableFiltering: true,
+    sortFn: (a, b, columnId) => {
+      const aNum = parseInt(
+        (a[columnId as keyof DataRow] as string).replace("Name ", "")
+      );
+      const bNum = parseInt(
+        (b[columnId as keyof DataRow] as string).replace("Name ", "")
+      );
+      return aNum - bNum;
+    },
+    index: 1,
   },
   {
     id: "email",
     header: "Email",
     enableFiltering: true,
+    sortFn: (a, b, columnId) => {
+      const aNum = parseInt(
+        (a[columnId as keyof DataRow] as string).replace("Name ", "")
+      );
+      const bNum = parseInt(
+        (b[columnId as keyof DataRow] as string).replace("Name ", "")
+      );
+      return aNum - bNum;
+    },
+    index: 2,
   },
   {
     id: "status",
@@ -66,6 +87,7 @@ export const columns: ColumnDef<DataRow>[] = [
         </span>
       );
     },
+    index: 3,
   },
   {
     id: "createdAt",
@@ -73,6 +95,7 @@ export const columns: ColumnDef<DataRow>[] = [
     cell: (row) => {
       return new Date(row.createdAt).toLocaleDateString();
     },
+    index: 4,
   },
 ];
 
@@ -96,6 +119,7 @@ export type ControlledDataGridWrapperProps = {
     }) => React.ReactNode;
   };
   data: DataRow[];
+  totalRows: number;
   columns: ColumnDef<DataRow>[];
   pageSize?: number;
   enablePagination?: boolean;
@@ -241,6 +265,7 @@ export const ControlledDataGridWrapper = (
     <DataGrid
       {...dataGridProps}
       data={paginatedData}
+      totalRows={props.data.length}
       sortState={sortState}
       onSortChange={setSortState}
       filterState={filterState}
