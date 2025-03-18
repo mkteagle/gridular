@@ -25,7 +25,7 @@ export interface ColumnResizeState {
 
 export type RowSelectionState = Record<string, boolean>;
 
-export interface ThemeProviderContext {
+export interface ThemeProviderContextType {
   container: string;
   header: string;
   headerCell: string;

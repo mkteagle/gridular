@@ -5,10 +5,10 @@ import {
   sampleData,
   ControlledDataGridWrapper,
   ThemeWrapper,
-} from "../utils/data-grid-helpers";
+} from "../Shared/utils/data-grid-helpers";
 
 const meta: Meta<typeof ControlledDataGridWrapper> = {
-  title: "Data Grid/Main/Themes",
+  title: "Data Grid/Themes",
   component: ControlledDataGridWrapper,
   decorators: [
     (Story, context) => (

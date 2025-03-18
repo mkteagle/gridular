@@ -202,6 +202,8 @@ export function TableHeader<T>({
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, column.id)}
               onDragEnd={handleDragEnd}
+              role="columnheader"
+              aria-label={column.header}
             >
               <div className="flex items-center justify-between">
                 <div

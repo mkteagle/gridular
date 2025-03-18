@@ -1,7 +1,37 @@
+import { cn } from "@/lib/utils";
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { createMakeStyles } from "tss-react";
-import { cn } from "@/lib/utils";
-import { ThemeProviderContext } from "../data-grid/types";
+
+// Export theme interfaces
+export type ThemeProviderContext = Record<string, string>;
+
+// Light theme
+export const lightTheme: TssTheme = {
+  colors: {
+    primary: "#2563eb", // blue-600
+    secondary: "#6b7280", // gray-500
+    background: "#ffffff",
+    foreground: "#1e1e21", // slate-950
+    muted: "#f1f5f9", // slate-100
+    mutedForeground: "#64748b", // slate-500
+    border: "#e2e8f0", // slate-200
+    popover: "#ffffff",
+  },
+};
+
+// Dark theme
+export const darkTheme: TssTheme = {
+  colors: {
+    primary: "#3b82f6", // blue-500
+    secondary: "#9ca3af", // gray-400
+    background: "#121314",
+    foreground: "#f8fafc", // slate-50
+    muted: "#1e293b", // slate-800
+    mutedForeground: "#94a3b8", // slate-400
+    border: "#334155", // slate-700
+    popover: "#1a1c1e",
+  },
+};
 
 // TSS theme interface with all properties optional for easier updates
 export interface TssTheme {
@@ -116,6 +146,7 @@ export interface ThemeContext {
   setTailwindTheme: (theme: Partial<ThemeProviderContext>) => void;
   setTssTheme: (theme: TssTheme) => void; // Using the optional interface for updates
   resetTheme: () => void;
+  toggleThemeMode: () => void; // New function to toggle between light/dark modes
 }
 
 // Create a default unified theme for the context
@@ -131,6 +162,7 @@ const ThemeContext = createContext<ThemeContext>({
   setTailwindTheme: () => {},
   setTssTheme: () => {},
   resetTheme: () => {},
+  toggleThemeMode: () => {}, // Add default no-op implementation
 });
 
 // Props for the theme provider
@@ -138,13 +170,18 @@ interface ThemeProviderProps {
   children: React.ReactNode;
   initialTailwindTheme?: Partial<ThemeProviderContext>;
   initialTssTheme?: TssTheme;
+  darkMode?: boolean; // Optional prop to initialize with dark mode
 }
 
 export const ThemeProvider = ({
   children,
   initialTailwindTheme = {},
   initialTssTheme = {},
+  darkMode = false,
 }: ThemeProviderProps) => {
+  // Initialize with base theme according to darkMode prop
+  const baseTheme = darkMode ? darkTheme : lightTheme;
+
   // State for storing theme overrides
   const [tailwindTheme, setTailwindThemeState] =
     useState<Partial<ThemeProviderContext>>(initialTailwindTheme);
@@ -162,7 +199,8 @@ export const ThemeProvider = ({
         : undefined;
 
     return {
-      ...rest,
+      ...baseTheme, // Start with the appropriate base theme
+      ...rest, // Apply any customizations
       ...(processedSpacing && { spacing: processedSpacing }),
     };
   });
@@ -227,8 +265,52 @@ export const ThemeProvider = ({
           : undefined;
 
       return {
+        ...baseTheme, // Reset to the base theme
         ...rest,
         ...(processedSpacing && { spacing: processedSpacing }),
+      };
+    });
+  };
+
+  // New function to toggle between light and dark modes
+  const toggleThemeMode = () => {
+    setTssThemeState((prev) => {
+      // Determine current mode based on background color
+      const isDarkMode =
+        prev.colors?.background === darkTheme.colors?.background;
+
+      // Select the opposite theme as the base
+      const newBaseTheme = isDarkMode ? lightTheme : darkTheme;
+
+      // Apply the new base theme while preserving any custom settings
+      return {
+        ...prev,
+        colors: {
+          ...newBaseTheme.colors,
+          // Preserve any custom colors that don't exist in base themes
+          ...Object.fromEntries(
+            Object.entries(prev.colors || {}).filter(
+              ([key]) => !(key in newBaseTheme.colors!)
+            )
+          ),
+        },
+      };
+    });
+
+    // Update Tailwind classes to match the new theme mode
+    setTailwindThemeState((prev) => {
+      const isDarkMode =
+        tssTheme.colors?.background === darkTheme.colors?.background;
+
+      // Apply different hover effects based on theme
+      const rowClass = isDarkMode
+        ? "border-b border-border hover:bg-muted/30 transition-colors"
+        : "border-b border-border hover:bg-muted/50 transition-colors";
+
+      return {
+        ...prev,
+        row: rowClass,
+        // Other class adjustments as needed
       };
     });
   };
@@ -280,6 +362,7 @@ export const ThemeProvider = ({
       setTailwindTheme,
       setTssTheme,
       resetTheme,
+      toggleThemeMode, // Include the new toggle function
     };
   }, [tailwindTheme, tssTheme]);
 
@@ -299,20 +382,33 @@ export const useTssTheme = () => ({
 });
 
 // Create the hook for TSS styles
-export const { makeStyles } = createMakeStyles({
+export const { makeStyles, useStyles: useTssStyles } = createMakeStyles({
   useTheme: () => useTssTheme(),
 });
 
-// Helper for combining TSS with Tailwind
-export const useStyles = (
-  stylesFactory: (theme: CompleteTssTheme) => Record<string, any>
+// Better documentation and improved helper for combining TSS with Tailwind
+/**
+ * Hook for creating styles with TSS.
+ * USAGE:
+ * const { styles, cx } = useStyles((theme) => ({
+ *   container: { borderLeft: `4px solid ${theme.colors?.primary}` },
+ * }));
+ *
+ * return <div className={cx("tailwind-class", styles.container)}>...</div>;
+ */
+export const useStyles = <T extends Record<string, any>>(
+  stylesFn: (theme: ReturnType<typeof useTssTheme>) => T
 ) => {
-  const tss = useTssTheme() as CompleteTssTheme;
-  const styles = useMemo(() => stylesFactory(tss), [tss]);
+  const { css, cx } = useTssStyles();
+  const styles: Record<string, string> = {};
 
-  return {
-    styles,
-    cx: (...classNames: (string | undefined | null | false)[]) =>
-      cn(...classNames),
-  };
+  // Get the styles object
+  const styleObj = stylesFn(useTssTheme());
+
+  // Convert each style to a className
+  Object.entries(styleObj).forEach(([key, value]) => {
+    styles[key] = css(value);
+  });
+
+  return { styles, cx };
 };

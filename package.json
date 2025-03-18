@@ -3,17 +3,28 @@
   "version": "1.0.0",
   "description": "A customizable data grid component for React.",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "next dev",
-    "build": "tsup",
+    "build": "tsup components/index.ts --format esm,cjs --dts",
+    "dev-tsup": "tsup components/index.ts --watch",
     "lint": "eslint . --ext .ts,.tsx",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "react",
@@ -36,49 +47,40 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.482.0",
-    "next": "15.2.2",
+    "next": "^15.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "ts-node": "^10.9.2",
     "tss-react": "^4.9.15"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.6",
-    "@storybook/addon-essentials": "^8.6.6",
-    "@storybook/addon-interactions": "^8.6.6",
-    "@storybook/addon-mdx-gfm": "^8.6.6",
-    "@storybook/addon-onboarding": "^8.6.6",
-    "@storybook/blocks": "^8.6.6",
+    "@storybook/addon-essentials": "^8.6.7",
+    "@storybook/addon-links": "^8.6.7",
     "@storybook/nextjs": "^8.6.6",
     "@storybook/react": "^8.6.6",
     "@storybook/test": "^8.6.6",
+    "@storybook/theming": "^8.6.7",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "playwright": "^1.51.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "3.0.9",
+    "jsdom": "^26.0.0",
     "storybook": "^8.6.6",
+    "storybook-dark-mode": "^4.0.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsup": "^8.4.0",
+    "typescript": "^5",
+    "vitest": "^3.0.9"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "jsdom",
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
-    },
-    "setupFilesAfterEnv": [
-      "<rootDir>/jest.setup.ts"
-    ],
-    "collectCoverageFrom": [
-      "components/**/*.{ts,tsx}",
-      "!**/node_modules/**",
-      "!**/dist/**"
-    ]
   },
   "resolutions": {
     "string-width": "4.2.3",
