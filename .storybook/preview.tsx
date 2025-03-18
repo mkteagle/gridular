@@ -1,10 +1,10 @@
 import type { Preview } from "@storybook/react";
-import { themes } from "@storybook/theming";
 import { darkTheme, lightTheme } from "./theme";
 import "../app/globals.css";
 import "./preview.css";
 import React from "react";
 import { withThemeProvider, ThemedDocsContainer } from "./withThemeProvider";
+import pkg from "../package.json";
 
 const preview: Preview = {
   parameters: {
@@ -40,6 +40,12 @@ const preview: Preview = {
       lightClass: "light",
       stylePreview: true,
     },
+    options: {
+      storySort: {
+        order: ["Introduction", "Components", "*"],
+      },
+    },
+    brandTitle: `Gridular v${pkg.version}`,
   },
   decorators: [
     withThemeProvider,
