@@ -42,10 +42,9 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Introduction", "Components", "*"],
+        order: ["Introduction", "Data Grid", "Components", "*"],
       },
     },
-    brandTitle: `Gridular v${pkg.version}`,
   },
   decorators: [
     withThemeProvider,

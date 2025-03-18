@@ -1,11 +1,12 @@
 import { create } from "@storybook/theming/create";
+import pkg from "../package.json";
 
 // Dark theme
 export const darkTheme = create({
   base: "dark",
-  brandTitle: "Gridular",
-  brandImage: "/app/logo.svg",
+  brandTitle: `Gridular v${pkg.version}`,
   brandTarget: "_self",
+  brandImage: "/app/logo.svg",
   brandUrl: "https://github.com/mkteagle/gridular",
 
   // Color palette
@@ -43,6 +44,10 @@ export const darkTheme = create({
 // Light theme
 export const lightTheme = create({
   base: "light",
+  brandImage: "/app/logo.svg",
+  brandTitle: `Gridular v${pkg.version}`, // Add version to light theme too
+  brandTarget: "_self",
+  brandUrl: "https://github.com/mkteagle/gridular",
 
   // Color palette
   colorPrimary: "#2563eb",
@@ -74,11 +79,6 @@ export const lightTheme = create({
   buttonBg: "#2563eb",
   buttonBorder: "transparent",
   booleanSelectedBg: "#2563eb",
-
-  // Brand
-  brandTitle: "Gridular",
-  brandUrl: "https://github.com/mkteagle/gridular",
-  brandTarget: "_blank",
 });
 
 // Default theme (export dark theme as default)
