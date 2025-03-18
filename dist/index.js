@@ -656,7 +656,9 @@ function TableHeader({
         onDragEnter: handleDragEnter,
         onDragLeave: handleDragLeave,
         onDrop: (e3) => handleDrop(e3, column.id),
-        onDragEnd: handleDragEnd
+        onDragEnd: handleDragEnd,
+        role: "columnheader",
+        "aria-label": column.header
       },
       /* @__PURE__ */ import_react3.default.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react3.default.createElement(
         "div",

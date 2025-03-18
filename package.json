@@ -2,14 +2,24 @@
   "name": "gridular",
   "version": "1.0.0",
   "description": "A customizable data grid component for React.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkteagle/gridular"
+  },
+  "homepage": "https://gridular.vercel.app",
+  "bugs": {
+    "url": "https://github.com/mkteagle/gridular/issues"
+  },
+  "author": "Michael Teagle",
+  "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "files": [
@@ -24,7 +34,8 @@
     "build-storybook": "storybook build",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "publish": "npm publish --access public"
   },
   "keywords": [
     "react",
@@ -34,8 +45,6 @@
     "sorting",
     "filtering"
   ],
-  "author": "Michael Teagle",
-  "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
