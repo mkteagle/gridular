@@ -1,6 +1,6 @@
 {
   "name": "gridular",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A customizable data grid component for React.",
   "repository": {
     "type": "git",
