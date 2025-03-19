@@ -475,16 +475,17 @@ export function DataGrid<T>({
                     renderHeader({ column, sortDirection })
                 : undefined
             }
-            renderSortIcon={(column, sortDirection) =>
-              renderSortIcon
-                ? renderSortIcon({
-                    isSorted: sortDirection !== undefined,
-                    sortDirection,
-                  })
-                : null
+            renderSortIcon={
+              !!renderSortIcon
+                ? (column, sortDirection) =>
+                    renderSortIcon({
+                      isSorted: sortDirection !== undefined,
+                      sortDirection,
+                    })
+                : undefined
             }
             renderFilterIcon={
-              renderFilterIcon
+              !!renderFilterIcon
                 ? (column, isActive) =>
                     renderFilterIcon({
                       isFiltered: isActive,

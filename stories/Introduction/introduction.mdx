@@ -1,0 +1,310 @@
+import { Meta } from "@storybook/addon-docs";
+
+<Meta title="Introduction" />
+
+# Gridular Data Grid
+
+Gridular is a powerful, flexible, and customizable data grid component for React applications. It provides a comprehensive solution for displaying and interacting with tabular data, with features like sorting, filtering, pagination, and more - all designed to work seamlessly with modern React applications.
+
+## Installation
+
+```bash
+npm install gridular
+# or
+yarn add gridular
+```
+
+## Basic Usage
+
+```tsx
+import { DataGrid } from "gridular";
+
+const columns = [
+  { id: "name", header: "Name" },
+  { id: "age", header: "Age" },
+  { id: "email", header: "Email" },
+];
+
+const data = [
+  { id: "1", name: "John Doe", age: 30, email: "john@example.com" },
+  { id: "2", name: "Jane Smith", age: 25, email: "jane@example.com" },
+];
+
+function MyComponent() {
+  return (
+    <DataGrid columns={columns} data={data} idAccessor={(row) => row.id} />
+  );
+}
+```
+
+## Core Features
+
+- 🔄 **Sorting** - Sort your data by any column
+- 🔍 **Filtering** - Filter data with built-in or custom filter functions
+- 📑 **Pagination** - Navigate through large datasets with ease
+- ✅ **Row Selection** - Select and manage multiple rows
+- ↔️ **Column Resizing** - Adjust column widths dynamically
+- 🔄 **Column Reordering** - Drag and drop to reorder columns
+- 📊 **Data Grouping** - Group your data by any column
+- 🎨 **Theming** - Fully customizable appearance
+- 💾 **State Persistence** - Save user preferences
+- ⚡ **Performance Optimized** - Handles large datasets efficiently
+
+## Complete API Reference
+
+### DataGrid Component Props
+
+| Prop                       | Type                                                                | Default                          | Description                                       |
+| -------------------------- | ------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `columns`                  | `ColumnDef<T>[]`                                                    | Required                         | Definitions for the grid columns                  |
+| `data`                     | `T[]`                                                               | Required                         | Data to display in the grid                       |
+| `idAccessor`               | `(row: T) => string`                                                | Required                         | Function to get a unique ID from each row         |
+| `enableSorting`            | `boolean`                                                           | `false`                          | Enable column sorting                             |
+| `enableFiltering`          | `boolean`                                                           | `false`                          | Enable column filtering                           |
+| `enablePagination`         | `boolean`                                                           | `false`                          | Enable data pagination                            |
+| `enableRowSelection`       | `boolean`                                                           | `false`                          | Enable row selection                              |
+| `enableColumnResize`       | `boolean`                                                           | `false`                          | Enable column resizing                            |
+| `enableColumnReorder`      | `boolean`                                                           | `false`                          | Enable column reordering                          |
+| `enableGrouping`           | `boolean`                                                           | `false`                          | Enable data grouping                              |
+| `initialSortState`         | `{ column: string; direction: 'asc' \| 'desc' }`                    | `null`                           | Initial sort state                                |
+| `initialFilterState`       | `Record<string, string>`                                            | `{}`                             | Initial filter state                              |
+| `initialPaginationState`   | `{ pageIndex: number; pageSize: number }`                           | `{ pageIndex: 0, pageSize: 10 }` | Initial pagination state                          |
+| `initialRowSelectionState` | `Record<string, boolean>`                                           | `{}`                             | Initially selected rows                           |
+| `pageSizeOptions`          | `number[]`                                                          | `[10, 20, 30, 40, 50]`           | Available page sizes                              |
+| `renderHeader`             | `(column: ColumnDef<T>, sortDirection: SortDirection) => ReactNode` | `undefined`                      | Custom column header renderer                     |
+| `renderCell`               | `(props: CellRenderProps<T>) => ReactNode`                          | `undefined`                      | Custom cell renderer                              |
+| `renderNoData`             | `() => ReactNode`                                                   | `() => "No data available"`      | Custom empty state renderer                       |
+| `renderGroupRow`           | `(props: GroupRowRenderProps) => ReactNode`                         | `undefined`                      | Custom group row renderer                         |
+| `gridClassName`            | `string`                                                            | `undefined`                      | Additional CSS class for the grid container       |
+| `rowClassName`             | `string`                                                            | `undefined`                      | Additional CSS class for rows                     |
+| `selectedRowClassName`     | `string`                                                            | `undefined`                      | Additional CSS class for selected rows            |
+| `headerClassName`          | `string`                                                            | `undefined`                      | Additional CSS class for the header row           |
+| `cellClassName`            | `string`                                                            | `undefined`                      | Additional CSS class for cells                    |
+| `paginationClassName`      | `string`                                                            | `undefined`                      | Additional CSS class for the pagination component |
+
+### Event Handlers
+
+| Prop                     | Type                                            | Description                      |
+| ------------------------ | ----------------------------------------------- | -------------------------------- |
+| `onRowClick`             | `(row: T) => void`                              | Row click handler                |
+| `onSortChange`           | `(state: SortState) => void`                    | Sort state change handler        |
+| `onFilterChange`         | `(state: Record<string, string>) => void`       | Filter state change handler      |
+| `onPageChange`           | `(pageIndex: number) => void`                   | Page change handler              |
+| `onPageSizeChange`       | `(pageSize: number) => void`                    | Page size change handler         |
+| `onRowSelectionChange`   | `(state: Record<string, boolean>) => void`      | Row selection change handler     |
+| `onVisibleColumnsChange` | `(visibleColumns: string[]) => void`            | Column visibility change handler |
+| `onColumnReorder`        | `(draggedId: string, targetId: string) => void` | Column reorder handler           |
+
+### Column Definition
+
+| Property          | Type                                           | Default                  | Description                                      |
+| ----------------- | ---------------------------------------------- | ------------------------ | ------------------------------------------------ |
+| `id`              | `string`                                       | Required                 | Unique identifier for the column                 |
+| `header`          | `string`                                       | Required                 | Display text for the column header               |
+| `accessor`        | `(row: T) => any`                              | Optional                 | Function to access the column's value from a row |
+| `cell`            | `(props: { value: any; row: T }) => ReactNode` | Optional                 | Custom cell renderer                             |
+| `width`           | `number`                                       | `150`                    | Column width in pixels                           |
+| `minWidth`        | `number`                                       | `50`                     | Minimum column width when resizing               |
+| `enableSorting`   | `boolean`                                      | `true`                   | Enable sorting for this column                   |
+| `enableFiltering` | `boolean`                                      | `true`                   | Enable filtering for this column                 |
+| `enableResize`    | `boolean`                                      | `true`                   | Enable resizing for this column                  |
+| `enableGrouping`  | `boolean`                                      | `true`                   | Enable grouping for this column                  |
+| `sortFn`          | `(a: T, b: T, dir: 'asc' \| 'desc') => number` | Built-in                 | Custom sort function                             |
+| `filterFn`        | `(row: T, value: string) => boolean`           | Built-in                 | Custom filter function                           |
+| `formatFn`        | `(value: any) => string`                       | `value => String(value)` | Format cell value for display                    |
+| `headerClassName` | `string`                                       | `undefined`              | Additional CSS class for header cell             |
+| `cellClassName`   | `string`                                       | `undefined`              | Additional CSS class for data cells              |
+
+### Theme Configuration
+
+The `ThemeProvider` component allows you to customize the appearance of the grid:
+
+| Property           | Type     | Description               |
+| ------------------ | -------- | ------------------------- |
+| `container`        | `string` | Grid container styles     |
+| `row`              | `string` | Row styles                |
+| `cell`             | `string` | Cell styles               |
+| `headerCell`       | `string` | Header cell styles        |
+| `sortIcon`         | `string` | Sort icon styles          |
+| `sortIconActive`   | `string` | Active sort icon styles   |
+| `filterIcon`       | `string` | Filter icon styles        |
+| `filterIconActive` | `string` | Active filter icon styles |
+
+### DataGrid Component Props
+
+| Prop                 | Type                                             | Default                | Description          |
+| -------------------- | ------------------------------------------------ | ---------------------- | -------------------- |
+| `columns`            | `ColumnDef<T>[]`                                 | Required               | Column definitions   |
+| `data`               | `T[]`                                            | Required               | Data to display      |
+| `idAccessor`         | `(row: T) => string`                             | Required               | Row ID function      |
+| `enableSorting`      | `boolean`                                        | `false`                | Enable sorting       |
+| `enableFiltering`    | `boolean`                                        | `false`                | Enable filtering     |
+| `enablePagination`   | `boolean`                                        | `false`                | Enable pagination    |
+| `enableRowSelection` | `boolean`                                        | `false`                | Enable row selection |
+| `enableColumnResize` | `boolean`                                        | `false`                | Enable column resize |
+| `initialSortState`   | `{ column: string; direction: "asc" \| "desc" }` | `null`                 | Initial sort         |
+| `pageSizeOptions`    | `number[]`                                       | `[10, 20, 30, 40, 50]` | Page size options    |
+
+### Column Definition
+
+| Property          | Type              | Default  | Description     |
+| ----------------- | ----------------- | -------- | --------------- |
+| `id`              | `string`          | Required | Column ID       |
+| `header`          | `string`          | Required | Header text     |
+| `accessor`        | `(row: T) => any` | Optional | Value accessor  |
+| `width`           | `number`          | `150`    | Column width    |
+| `enableSorting`   | `boolean`         | `true`   | Allow sorting   |
+| `enableFiltering` | `boolean`         | `true`   | Allow filtering |
+
+### Event Handlers
+
+| Handler          | Type                                      | Description       |
+| ---------------- | ----------------------------------------- | ----------------- |
+| `onSortChange`   | `(state: SortState) => void`              | Sort changed      |
+| `onFilterChange` | `(state: FilterState) => void`            | Filter changed    |
+| `onPageChange`   | `(page: number) => void`                  | Page changed      |
+| `onRowSelect`    | `(rows: Record<string, boolean>) => void` | Selection changed |
+
+### With All Features
+
+```tsx
+<DataGrid
+  columns={columns}
+  data={data}
+  idAccessor={(row) => row.id}
+  enableSorting
+  enableFiltering
+  enablePagination
+  enableRowSelection
+  enableColumnResize
+  pageSizeOptions={[10, 20, 50]}
+  onSortChange={(sortState) => console.log("Sort:", sortState)}
+  onFilterChange={(filterState) => console.log("Filter:", filterState)}
+  onPageChange={(page) => console.log("Page:", page)}
+  onRowSelect={(selection) => console.log("Selected:", selection)}
+/>
+```
+
+### Custom Cell Rendering
+
+```tsx
+const columns = [
+  {
+    id: "status",
+    header: "Status",
+    cell: ({ value }) => (
+      <div className="flex items-center gap-2">
+        <div
+          className={`w-2 h-2 rounded-full ${
+            value === "active" ? "bg-green-500" : "bg-red-500"
+          }`}
+        />
+        {value}
+      </div>
+    ),
+  },
+];
+```
+
+### Server-Side Operations
+
+```tsx
+function ServerSideGrid() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = useCallback(async (params) => {
+    setLoading(true);
+    const response = await api.fetchData(params);
+    setData(response.data);
+    setLoading(false);
+  }, []);
+
+  return (
+    <DataGrid
+      columns={columns}
+      data={data}
+      loading={loading}
+      onSortChange={fetchData}
+      onFilterChange={fetchData}
+      onPageChange={fetchData}
+    />
+  );
+}
+```
+
+## Styling
+
+### Theme Customization
+
+```tsx
+<ThemeProvider
+  theme={{
+    container: "bg-white border rounded-lg shadow",
+    row: "hover:bg-gray-50",
+    cell: "px-4 py-2",
+    header: "bg-gray-100 font-medium",
+    selected: "bg-blue-50",
+  }}
+>
+  <DataGrid {...props} />
+</ThemeProvider>
+```
+
+### CSS Classes
+
+| Class Name       | Purpose           |
+| ---------------- | ----------------- |
+| `grid-container` | Main grid wrapper |
+| `grid-header`    | Header row        |
+| `grid-row`       | Data row          |
+| `grid-cell`      | Individual cell   |
+| `selected`       | Selected row      |
+| `sorted`         | Sorted column     |
+| `filtered`       | Filtered column   |
+
+## Best Practices
+
+1. **Performance**
+
+   - Use virtualization for large datasets
+   - Implement server-side operations when needed
+   - Memoize custom renderers
+
+2. **Accessibility**
+
+   - Provide ARIA labels
+   - Ensure keyboard navigation
+   - Maintain proper contrast ratios
+
+3. **State Management**
+   - Use controlled components for complex state
+   - Implement proper error boundaries
+   - Handle loading states appropriately
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Performance Issues**
+
+   - Enable virtualization
+   - Implement pagination
+   - Use server-side operations
+
+2. **Styling Conflicts**
+
+   - Use specific class names
+   - Override with higher specificity
+   - Check theme configuration
+
+3. **State Updates**
+   - Verify event handlers
+   - Check state management
+   - Debug with React DevTools
+
+## Support
+
+For issues and feature requests, please visit our [GitHub repository](https://github.com/mkteagle/gridular).
+
+For detailed examples and live demos, check out our [Storybook documentation](https://gridular.vercel.app).

@@ -167,6 +167,7 @@ export function TableHeader<T>({
     );
   };
 
+  console.info(!!renderSortIcon);
   return (
     <thead>
       <tr className={cn(theme.classes.header, headerClassName)}>
@@ -211,7 +212,7 @@ export function TableHeader<T>({
               <div className="flex items-center justify-between">
                 <div
                   className={cn(
-                    "cursor-pointer",
+                    "cursor-pointer flex items-center",
                     enableSorting &&
                       column.enableSorting !== false &&
                       "hover:text-foreground"
@@ -225,18 +226,20 @@ export function TableHeader<T>({
                   {renderHeader ? (
                     renderHeader(column, sortDirection)
                   ) : (
-                    <div className="flex items-center">
+                    <>
                       <span>{column.header}</span>
-                      {enableSorting &&
-                        column.enableSorting !== false &&
-                        sortDirection && (
-                          <div className="ml-1">
-                            {renderSortIcon
-                              ? renderSortIcon(column, sortDirection)
-                              : defaultSortIcon(column, sortDirection)}
-                          </div>
-                        )}
-                    </div>
+                      {enableSorting && column.enableSorting !== false && (
+                        <>
+                          {sortDirection && (
+                            <span className="inline-flex ml-1" role="img">
+                              {renderSortIcon
+                                ? renderSortIcon(column, sortDirection)
+                                : defaultSortIcon(column, sortDirection)}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
 

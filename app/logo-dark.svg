@@ -1,8 +1,0 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark Background -->
-  <rect width="200" height="200" fill="#18181B"/>
-  <!-- Rounded square grid -->
-  <rect x="20" y="20" width="160" height="160" rx="20" fill="#4F46E5"/>
-  <!-- Grid squares -->
-  <path fill="#ffffff" d="M60 60h20v20H60zm30 0h20v20H90zm30 0h20v20h-20zm-60 30h20v20H60zm30 0h20v20H90zm30 0h20v20h-20zm-60 30h20v20H60zm30 0h20v20H90zm30 0h20v20h-20z"/>
-</svg>

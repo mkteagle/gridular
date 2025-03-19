@@ -4,6 +4,91 @@
   min-width: 100%;
 }
 
+.sbdocs table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+.sbdocs th {
+  width: 25% !important; /* Equal width columns - adjust percentage based on your needs */
+}
+
+/* For tables with specific column counts, you can use these patterns: */
+.sbdocs table[data-columns="4"] th {
+  width: 25% !important;
+}
+
+.sbdocs table[data-columns="3"] th {
+  width: 33.33% !important;
+}
+
+.sbdocs table[data-columns="2"] th {
+  width: 50% !important;
+}
+
+/* If you want specific columns to have different widths */
+.sbdocs th:first-child {
+  width: 20% !important; /* Prop column */
+}
+
+.sbdocs th:nth-child(2) {
+  width: 30% !important; /* Type column */
+}
+
+.sbdocs th:nth-child(3) {
+  width: 20% !important; /* Default column */
+}
+
+.sbdocs th:nth-child(4) {
+  width: 30% !important; /* Description column */
+}
+
+/* Ensure cells wrap properly */
+.sbdocs td,
+.sbdocs th {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.sbdocs table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+/* Cell wrapping styles */
+.sbdocs td,
+.sbdocs th {
+  padding: 12px 16px !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  vertical-align: top !important;
+  line-height: 1.5 !important;
+  min-width: 100px !important;
+}
+
+/* Type column needs more width for complex types */
+.sbdocs th:nth-child(2),
+.sbdocs td:nth-child(2) {
+  width: 35% !important;
+}
+
+/* Description column can be wider */
+.sbdocs th:nth-child(4),
+.sbdocs td:nth-child(4) {
+  width: 35% !important;
+}
+
+/* Prop name and default can be narrower */
+.sbdocs th:first-child,
+.sbdocs td:first-child,
+.sbdocs th:nth-child(3),
+.sbdocs td:nth-child(3) {
+  width: 15% !important;
+}
+
 /* Light mode overrides */
 .light .sbdocs {
   background-color: #ffffff !important;
@@ -25,6 +110,28 @@
 
 .light .docblock-argstable-body tr td:nth-child(2) span {
   color: #1e293b !important;
+}
+
+.light .sbdocs table {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px;
+  background: #ffffff !important;
+}
+
+.light .sbdocs tr {
+  background: #ffffff !important;
+}
+
+.light .sbdocs th {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 12px 16px;
+}
+
+.light .sbdocs td {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 12px 16px;
 }
 
 .light .sbdocs h1,
@@ -81,6 +188,167 @@
 .light #storybook-preview-wrapper {
   background: #f8fafc !important;
 }
+
+/* Code block styling for light mode */
+.light .docblock-source {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px;
+  margin: 1.5em 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.light .docblock-source pre {
+  margin: 0 !important;
+  padding: 1rem !important;
+}
+
+.light .docblock-source code {
+  background: transparent !important;
+  color: #334155 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem !important;
+  line-height: 1.7 !important;
+  text-shadow: none !important;
+}
+
+/* Syntax highlighting for light theme */
+.light .docblock-source .hljs-keyword {
+  color: #7c3aed !important; /* Purple for keywords */
+}
+
+.light .docblock-source .hljs-string {
+  color: #047857 !important; /* Green for strings */
+}
+
+.light .docblock-source .hljs-comment {
+  color: #64748b !important; /* Slate for comments */
+  font-style: italic;
+}
+
+.light .docblock-source .hljs-function {
+  color: #0369a1 !important; /* Blue for functions */
+}
+
+.light .docblock-source .hljs-number {
+  color: #c026d3 !important; /* Pink for numbers */
+}
+
+.light .docblock-source .hljs-operator {
+  color: #475569 !important; /* Gray for operators */
+}
+
+/* Inline code styling */
+.light .sbdocs code:not(.docblock-source code) {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  padding: 0.2em 0.4em !important;
+  border-radius: 4px;
+  font-size: 0.9em !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Syntax highlighting for light theme */
+.light .docblock-source .token.imports {
+  color: #0369a1 !important; /* Blue for imports */
+}
+
+.light .docblock-source .token.punctuation {
+  color: #475569 !important; /* Slate for punctuation */
+}
+
+.light .docblock-source .token.function {
+  color: #7c3aed !important; /* Purple for functions */
+}
+
+.light .docblock-source .token {
+  background: transparent !important;
+}
+
+/* Update existing syntax highlighting */
+.light .docblock-source .hljs-keyword,
+.light .docblock-source .token.keyword {
+  color: #7c3aed !important; /* Purple for keywords */
+}
+
+.light .docblock-source .hljs-string,
+.light .docblock-source .token.string {
+  color: #047857 !important; /* Green for strings */
+}
+
+.light .docblock-source .hljs-comment,
+.light .docblock-source .token.comment {
+  color: #64748b !important; /* Slate for comments */
+  font-style: italic;
+}
+
+.light .docblock-source .hljs-function,
+.light .docblock-source .token.function-variable {
+  color: #0369a1 !important; /* Blue for functions */
+}
+
+.light .docblock-source .hljs-number,
+.light .docblock-source .token.number {
+  color: #c026d3 !important; /* Pink for numbers */
+}
+
+.light .docblock-source .hljs-operator,
+.light .docblock-source .token.operator {
+  color: #475569 !important; /* Gray for operators */
+}
+
+/* Syntax highlighting for light theme */
+/* Script tag tokens */
+.light .docblock-source .token.tag.script.language-javascript {
+  color: #0369a1 !important; /* Blue for script tags */
+}
+
+/* Console and class name tokens */
+.light .docblock-source .token.console,
+.light .docblock-source .token.class-name {
+  color: #0891b2 !important; /* Cyan for console/class names */
+}
+
+/* Additional specific token styles */
+.light .docblock-source .token.tag {
+  color: #7c3aed !important; /* Purple for tags */
+}
+
+.light .docblock-source .token.attr-name {
+  color: #0369a1 !important; /* Blue for attribute names */
+}
+
+.light .docblock-source .token.attr-value {
+  color: #047857 !important; /* Green for attribute values */
+}
+
+/* Language specific tokens */
+.light .docblock-source .token.language-javascript {
+  color: #334155 !important; /* Slate for general JS */
+}
+
+/* Additional token styles for light theme */
+.light .docblock-source .token.tag.script.language-javascript {
+  color: #0369a1 !important; /* Blue for script tags */
+}
+
+.light .docblock-source .token.template-string {
+  color: #047857 !important; /* Green for template strings */
+}
+
+.light .docblock-source .token.interpolation {
+  color: #7c3aed !important; /* Purple for interpolation */
+}
+
+.light .docblock-source .token.tag {
+  color: #0891b2 !important; /* Cyan for tags */
+}
+
+.light .docblock-source .token.template-string.interpolation {
+  color: #0369a1 !important; /* Blue for template string interpolation */
+}
+
+/* Make sure these new styles appear before the dark mode section */
 
 /* Dark mode - existing styles */
 .dark .sbdocs {
@@ -149,4 +417,25 @@
 
 .dark #storybook-preview-wrapper {
   background: #121314 !important;
+}
+.dark .sbdocs table {
+  border: 1px solid #2e2e2e !important;
+  border-radius: 6px;
+  background: #121314 !important;
+}
+
+.dark .sbdocs tr {
+  background: #121314 !important;
+}
+
+.dark .sbdocs th {
+  background: #1a1c1e !important;
+  border-bottom: 1px solid #2e2e2e !important;
+  padding: 12px 16px;
+}
+
+.dark .sbdocs td {
+  background: #121314 !important;
+  border-bottom: 1px solid #2e2e2e !important;
+  padding: 12px 16px;
 }
