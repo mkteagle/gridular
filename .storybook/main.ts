@@ -1,4 +1,4 @@
-import type { StorybookConfig } from "@storybook/nextjs";
+import type { StorybookConfig } from "@storybook/react-vite";
 import remarkGfm from "remark-gfm";
 
 const config: StorybookConfig = {
@@ -6,11 +6,9 @@ const config: StorybookConfig = {
     "../stories/**/*.mdx",
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
+
   addons: [
     "@storybook/addon-links",
-    "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "storybook-dark-mode",
     {
       name: "@storybook/addon-docs",
       options: {
@@ -20,19 +18,19 @@ const config: StorybookConfig = {
           },
         },
       },
-    },
+    }
   ],
+
   framework: {
-    name: "@storybook/nextjs",
+    name: "@storybook/react-vite",
     options: {},
   },
+
   staticDirs: ["../public"],
-  docs: {
-    autodocs: true,
-  },
+
   typescript: {
     reactDocgen: "react-docgen-typescript",
-  },
+  }
 };
 
 export default config;

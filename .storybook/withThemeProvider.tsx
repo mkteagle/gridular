@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "../components/theme-provider/theme-provider";
 import { useEffect, useState } from "react";
-import { DocsContainer, DocsContainerProps } from "@storybook/blocks";
+import { DocsContainer, DocsContainerProps } from "@storybook/addon-docs/blocks";
 import { useDarkMode } from "storybook-dark-mode";
 
 // Decorator for wrapping stories with ThemeProvider

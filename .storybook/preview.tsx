@@ -1,4 +1,4 @@
-import type { Preview } from "@storybook/react";
+import type { Preview } from "@storybook/nextjs";
 import { darkTheme, lightTheme } from "./theme";
 import "../app/globals.css";
 import "./preview.css";
@@ -9,17 +9,17 @@ import pkg from "../package.json";
 const preview: Preview = {
   parameters: {
     backgrounds: {
-      default: "auto",
-      values: [
-        {
+      options: {
+        dark: {
           name: "dark",
           value: "#121314",
         },
-        {
+
+        light: {
           name: "light",
           value: "#ffffff",
-        },
-      ],
+        }
+      }
     },
     actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {
@@ -46,6 +46,7 @@ const preview: Preview = {
       },
     },
   },
+
   decorators: [
     withThemeProvider,
     (Story, context) => {
@@ -60,6 +61,14 @@ const preview: Preview = {
       );
     },
   ],
+
+  initialGlobals: {
+    backgrounds: {
+      value: "auto"
+    }
+  },
+
+  tags: ["autodocs"]
 };
 
 export default preview;

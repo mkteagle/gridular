@@ -16,7 +16,7 @@ export function cn(...inputs: ClassValue[]) {
 export function mergeStyles<T extends object = {}>(
   tssStyles: CSSObject | undefined,
   tailwindClasses: string | string[]
-) {
+): { className: string; [key: string]: any } {
   // Convert tailwind classes to string
   const tailwindClassString = Array.isArray(tailwindClasses)
     ? tailwindClasses.join(" ")
