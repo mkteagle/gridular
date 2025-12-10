@@ -123,7 +123,15 @@ enableFiltering?: boolean
 ```
 **Default:** `false`
 
-Enable column filtering.
+Enable column filtering. When enabled, a filter icon appears in each column header (unless disabled for that specific column). Clicking the filter icon opens a dropdown with a text input where users can enter filter criteria.
+
+**Features:**
+- Click filter icon to open filter dropdown
+- Type to filter (supports Enter key to apply, Escape to close)
+- Visual indicator when a filter is active (copper-colored icon)
+- Click outside or press Escape to close dropdown
+- Default filtering uses case-insensitive substring matching
+- Custom filter functions can be defined per column
 
 #### `filterState`
 ```tsx
@@ -134,13 +142,21 @@ type FilterState = {
   [columnId: string]: string;
 }
 ```
-Controlled filter state.
+Controlled filter state. Each key is a column ID, and the value is the filter string for that column.
+
+**Example:**
+```tsx
+const [filterState, setFilterState] = useState<FilterState>({
+  name: 'John',
+  department: 'Engineering'
+});
+```
 
 #### `onFilterChange`
 ```tsx
 onFilterChange?: (filterState: FilterState) => void
 ```
-Callback when filters change.
+Callback when filters change. Receives the updated filter state object.
 
 ---
 
@@ -323,7 +339,7 @@ Additional CSS class for the grid container.
 ```tsx
 classes?: GridClasses
 ```
-Comprehensive styling object. See [Customization Guide](/docs/guides-customization--docs) for all available classes.
+Comprehensive styling object. See [Customization Guide](/docs/Guides-customization--docs) for all available classes.
 
 ---
 
@@ -363,6 +379,24 @@ onRowClick?: (row: T, index: number) => void
 ```
 Callback when a row is clicked.
 
+#### `onRowMouseDown`
+```tsx
+onRowMouseDown?: (row: T, index: number, event: React.MouseEvent<HTMLDivElement>) => void
+```
+Callback when mouse is pressed down on a row.
+
+#### `onRowMouseEnter`
+```tsx
+onRowMouseEnter?: (row: T, index: number, event: React.MouseEvent<HTMLDivElement>) => void
+```
+Callback when mouse enters a row.
+
+#### `onScroll`
+```tsx
+onScroll?: (event: { scrollTop: number; scrollHeight: number; clientHeight: number; scrollPercentage: number }) => void
+```
+Callback when the grid is scrolled. Provides scroll position and percentage.
+
 #### `getRowId`
 ```tsx
 getRowId?: (row: T) => string
@@ -370,6 +404,64 @@ getRowId?: (row: T) => string
 **Default:** `(row) => String(row.id)`
 
 Function to extract unique row ID from row data.
+
+---
+
+### Context Menu Props
+
+#### `contextMenuContent`
+```tsx
+contextMenuContent?: (row: T, column: ColumnDef<T>) => ReactNode
+```
+Optional callback to render a custom context menu when right-clicking on a cell. The context menu will appear at the cursor position and can be customized based on the row data and column clicked.
+
+**Example:**
+```tsx
+<DataGrid
+  columns={columns}
+  data={data}
+  contextMenuContent={(row, column) => (
+    <>
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(String(row[column.key]));
+        }}
+      >
+        Copy Cell Value
+      </button>
+      <button
+        onClick={() => {
+          console.log('Edit row:', row);
+        }}
+      >
+        Edit Row
+      </button>
+      <div className="virtualized-grid-context-menu-divider" />
+      <button
+        className="danger"
+        onClick={() => {
+          console.log('Delete row:', row);
+        }}
+      >
+        Delete Row
+      </button>
+    </>
+  )}
+/>
+```
+
+**Styling:** The context menu is automatically styled to match Gridular's design system. You can use these CSS classes within your menu content:
+- `virtualized-grid-context-menu-header` - For section headers
+- `virtualized-grid-context-menu-divider` - For dividers between menu items
+- `danger` - For dangerous/destructive actions (adds red styling)
+
+The context menu:
+- Appears at the cursor position when right-clicking a cell
+- Automatically closes when clicking outside, pressing ESC, or right-clicking elsewhere
+- Is optional - if not provided, the browser's default context menu will appear
+- Can be conditional based on the row data or column clicked
+
+**See also:** [Context Menu Examples](/story/features-context-menu--basic-context-menu)
 
 ---
 
@@ -474,6 +566,43 @@ const [sortState, setSortState] = useState<SortState | null>(null);
   columns={columns}
   data={data}
 />
+```
+
+### Controlled Filtering
+```tsx
+const [filterState, setFilterState] = useState<FilterState>({});
+
+<DataGrid
+  enableFiltering
+  filterState={filterState}
+  onFilterChange={setFilterState}
+  columns={columns}
+  data={data}
+/>
+```
+
+### Custom Filter Functions
+```tsx
+const columns: ColumnDef[] = [
+  {
+    id: 'salary',
+    header: 'Salary',
+    key: 'salary',
+    // Custom filter: numeric comparison
+    filterFn: (row, columnId, filterValue) => {
+      const minSalary = parseInt(filterValue);
+      if (isNaN(minSalary)) return true;
+      return row.salary >= minSalary;
+    },
+  },
+  {
+    id: 'status',
+    header: 'Status',
+    key: 'status',
+    // Disable filtering for this column
+    enableFiltering: false,
+  },
+];
 ```
 
 ### Controlled Pagination

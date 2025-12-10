@@ -194,6 +194,18 @@ export const CustomRowStyling: Story = {
         key: 'status',
         header: 'Status',
         width: 150,
+        render: (row) => {
+          const colors: Record<string, string> = {
+            active: 'bg-green-100 text-green-800',
+            pending: 'bg-yellow-100 text-yellow-800',
+            inactive: 'bg-gray-100 text-gray-800',
+          };
+          return (
+            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[row.status]}`}>
+              {row.status.toUpperCase()}
+            </span>
+          );
+        }
       },
       {
         id: 'priority',
@@ -209,22 +221,49 @@ export const CustomRowStyling: Story = {
         <div className="mb-4 p-4 bg-white rounded-lg shadow">
           <h3 className="font-ui text-lg font-semibold text-charcoal mb-2">Custom Row Styling</h3>
           <p className="font-ui text-sm text-gray-600">
-            Rows are styled based on status: Active (green), Pending (yellow), Inactive (gray).
+            Rows are styled based on status: Active (green background), Pending (yellow background), Inactive (gray background).
+            Each row has a colored left border matching its status.
           </p>
         </div>
-        <DataGrid
-          columns={columns}
-          data={data}
-          gridId="custom-row-styling"
-          renderCell={({ value, column }) => {
-
-            if (column.id === 'status') {
-              return <span className="font-semibold">{value}</span>;
-            }
-
-            return value;
-          }}
-        />
+        <style>{`
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row {
+            border-left: 4px solid transparent;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="active"]) {
+            background-color: rgb(240 253 244) !important;
+            border-left-color: rgb(34 197 94) !important;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="active"]):hover {
+            background-color: rgb(220 252 231) !important;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="pending"]) {
+            background-color: rgb(254 252 232) !important;
+            border-left-color: rgb(234 179 8) !important;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="pending"]):hover {
+            background-color: rgb(254 249 195) !important;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="inactive"]) {
+            background-color: rgb(249 250 251) !important;
+            border-left-color: rgb(156 163 175) !important;
+          }
+          [data-grid-id="custom-row-styling"] .virtualized-grid-row:has([data-status="inactive"]):hover {
+            background-color: rgb(243 244 246) !important;
+          }
+        `}</style>
+        <div data-grid-id="custom-row-styling">
+          <DataGrid
+            columns={columns}
+            data={data}
+            gridId="custom-row-styling"
+            renderCell={({ value, row, column }) => {
+              if (column.id === 'status') {
+                return <span data-status={row.status}>{column.render ? column.render(row) : value}</span>;
+              }
+              return value;
+            }}
+          />
+        </div>
       </div>
     );
   },

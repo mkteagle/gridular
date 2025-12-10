@@ -1,6 +1,7 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, X, Filter, Search } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
 import { cn, tssToInlineStyles } from './lib/utils';
 import { Pagination } from './Pagination';
 import { ColumnManager } from './components/ColumnManager';
@@ -130,6 +131,10 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
+  // Filter UI state
+  const [openFilterPopovers, setOpenFilterPopovers] = useState<Record<string, boolean>>({});
+  const [filterInputValues, setFilterInputValues] = useState<Record<string, string>>({});
+
   // Use controlled or uncontrolled state
   const sortState = controlledSortState !== undefined ? controlledSortState : internalSortState;
   const filterState = controlledFilterState || _internalFilterState;
@@ -182,6 +187,41 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
       }
     },
     [onSortChange]
+  );
+
+  const handleFilterChange = useCallback(
+    (columnId: string, filterValue: string) => {
+      const newFilterState = { ...filterState };
+      if (filterValue) {
+        newFilterState[columnId] = filterValue;
+      } else {
+        delete newFilterState[columnId];
+      }
+      if (_onFilterChange) {
+        _onFilterChange(newFilterState);
+      } else {
+        _setInternalFilterState(newFilterState);
+      }
+      setFilterInputValues((prev) => ({ ...prev, [columnId]: filterValue }));
+    },
+    [filterState, _onFilterChange]
+  );
+
+  const handleApplyFilter = useCallback(
+    (columnId: string) => {
+      handleFilterChange(columnId, filterInputValues[columnId] ?? '');
+      setOpenFilterPopovers((prev) => ({ ...prev, [columnId]: false }));
+    },
+    [handleFilterChange, filterInputValues]
+  );
+
+  const handleClearFilter = useCallback(
+    (columnId: string) => {
+      handleFilterChange(columnId, '');
+      setFilterInputValues((prev) => ({ ...prev, [columnId]: '' }));
+      setOpenFilterPopovers((prev) => ({ ...prev, [columnId]: false }));
+    },
+    [handleFilterChange]
   );
 
   const handleColumnWidthChange = useCallback(
@@ -567,40 +607,177 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           width: totalWidth,
         }}
       >
-        {columns.map((column, index) => (
-          <div
-            key={column.id}
-            className={cn(
-              'virtualized-grid-header-cell',
-              classes?.headerCell,
-              column.headerClassName,
-              dragOverColumn === column.id && 'bg-copper/10',
-              enableColumnReorder && 'cursor-move'
-            )}
-            style={{
-              ...tssToInlineStyles(classes?.headerCellStyle),
-              ...tssToInlineStyles(column.headerStyle),
-              width: getColumnWidth(column),
-              animationDelay: `${index * 0.05}s`,
-            }}
-            draggable={enableColumnReorder}
-            onDragStart={(e) => handleDragStart(e, column.id)}
-            onDragOver={(e) => handleDragOver(e, column.id)}
-            onDrop={(e) => handleDrop(e, column.id)}
-            onDragEnd={handleDragEnd}
-          >
-            <div
-              className="flex items-center justify-between gap-2 cursor-pointer"
-              onClick={() => handleSort(column.id)}
-            >
-              <span className="header-text">{column.header}</span>
-              {enableSorting && renderSortIconDefault(column)}
-            </div>
-            <div className="header-accent" />
+        {columns.map((column, index) => {
+          const isFiltered = enableFiltering && filterState[column.id];
+          const columnFilteringEnabled = column.enableFiltering !== false;
 
-            {/* Resize handle */}
-            {enableColumnResize && (
-              <div
+          return (
+            <div
+              key={column.id}
+              className={cn(
+                'virtualized-grid-header-cell',
+                classes?.headerCell,
+                column.headerClassName,
+                dragOverColumn === column.id && 'bg-copper/10',
+                enableColumnReorder && 'cursor-move'
+              )}
+              style={{
+                ...tssToInlineStyles(classes?.headerCellStyle),
+                ...tssToInlineStyles(column.headerStyle),
+                width: getColumnWidth(column),
+                animationDelay: `${index * 0.05}s`,
+              }}
+              draggable={enableColumnReorder}
+              onDragStart={(e) => handleDragStart(e, column.id)}
+              onDragOver={(e) => handleDragOver(e, column.id)}
+              onDrop={(e) => handleDrop(e, column.id)}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex items-center justify-between gap-1.5 w-full">
+                <div
+                  className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                  onClick={() => handleSort(column.id)}
+                >
+                  <span className="header-text truncate">{column.header}</span>
+                  {enableSorting && renderSortIconDefault(column)}
+                </div>
+
+                {/* Compact Filter Button */}
+                {enableFiltering && columnFilteringEnabled && (
+                  <Popover.Root
+                    open={openFilterPopovers[column.id] || false}
+                    onOpenChange={(open) => {
+                      setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: open }));
+                      if (open && !filterInputValues[column.id]) {
+                        setFilterInputValues((prev) => ({
+                          ...prev,
+                          [column.id]: filterState[column.id] ?? '',
+                        }));
+                      }
+                    }}
+                  >
+                    <Popover.Trigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          'relative p-1 rounded transition-all duration-200',
+                          'hover:bg-white/15 active:scale-95',
+                          'focus:outline-none focus-visible:ring-1 focus-visible:ring-ivory/50',
+                          isFiltered ? 'text-copper' : 'text-ivory',
+                          classes?.filterIcon
+                        )}
+                        title={isFiltered ? 'Filter active' : 'Filter'}
+                      >
+                        <Filter
+                          className={cn(
+                            'w-3 h-3 transition-all duration-200',
+                            isFiltered
+                              ? 'fill-copper drop-shadow-[0_0_4px_rgba(184,115,51,0.6)]'
+                              : 'text-ivory/90 hover:text-ivory'
+                          )}
+                        />
+                        {isFiltered && (
+                          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-copper rounded-full border border-ivory/30 animate-pulse" />
+                        )}
+                      </button>
+                    </Popover.Trigger>
+
+                    <Popover.Portal>
+                      <Popover.Content
+                        className={cn(
+                          'z-50 w-60 rounded-lg',
+                          'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                          'border-2 border-copper shadow-xl shadow-copper/20',
+                          'animate-in fade-in-0 zoom-in-95',
+                          classes?.filterMenu
+                        )}
+                        side="bottom"
+                        align="end"
+                        sideOffset={6}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="p-2.5 space-y-2.5">
+                          {/* Compact Header */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Search className="w-3 h-3 text-copper" />
+                              <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
+                                Filter {column.header}
+                              </span>
+                            </div>
+                            <Popover.Close
+                              className="p-0.5 rounded hover:bg-copper/10 transition-colors"
+                            >
+                              <X className="w-3 h-3 text-charcoal/60" />
+                            </Popover.Close>
+                          </div>
+
+                          {/* Compact Input */}
+                          <input
+                            type="text"
+                            value={filterInputValues[column.id] ?? ''}
+                            onChange={(e) => {
+                              setFilterInputValues((prev) => ({
+                                ...prev,
+                                [column.id]: e.target.value,
+                              }));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleApplyFilter(column.id);
+                              } else if (e.key === 'Escape') {
+                                setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: false }));
+                              }
+                            }}
+                            placeholder="Type to filter..."
+                            className={cn(
+                              'w-full px-2 py-1.5 text-xs',
+                              'bg-white border border-copper/20 rounded',
+                              'text-charcoal placeholder:text-charcoal/40',
+                              'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
+                              'transition-all'
+                            )}
+                            autoFocus
+                          />
+
+                          {/* Compact Actions */}
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => handleApplyFilter(column.id)}
+                              className={cn(
+                                'flex-1 px-2 py-1.5 rounded text-[11px] font-bold',
+                                'bg-gradient-to-r from-copper to-copper-dark text-white',
+                                'shadow-sm shadow-copper/30 hover:shadow-md',
+                                'active:scale-[0.98] transition-all'
+                              )}
+                            >
+                              Apply
+                            </button>
+                            {isFiltered && (
+                              <button
+                                onClick={() => handleClearFilter(column.id)}
+                                className={cn(
+                                  'px-2 py-1.5 rounded text-[11px] font-bold',
+                                  'bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70',
+                                  'active:scale-[0.98] transition-all'
+                                )}
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <Popover.Arrow className="fill-copper" width={12} height={6} />
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
+                )}
+              </div>
+              <div className="header-accent" />
+
+              {/* Resize handle */}
+              {enableColumnResize && (
+                <div
                 className={cn(
                   'absolute right-0 top-0 bottom-0 w-2 cursor-col-resize',
                   'hover:border-r-2 hover:border-copper transition-all',
@@ -628,10 +805,11 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
                   document.addEventListener('mousemove', handleMouseMove);
                   document.addEventListener('mouseup', handleMouseUp);
                 }}
-              />
-            )}
-          </div>
-        ))}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Body */}

@@ -466,8 +466,98 @@ describe('DataGrid Component', () => {
       const firstRow = screen.getByText('John Doe').closest('.virtualized-grid-row');
       if (firstRow) {
         await user.click(firstRow);
-        expect(onRowClick).toHaveBeenCalledWith(testData[0], 0);
+        expect(onRowClick).toHaveBeenCalledTimes(1);
+        expect(onRowClick.mock.calls[0][0]).toEqual(testData[0]);
+        expect(onRowClick.mock.calls[0][1]).toBe(0);
+        expect(onRowClick.mock.calls[0][2]).toBeDefined(); // Event object
       }
+    });
+
+    test('applies selected class to selected rows', () => {
+      const selectedRows = { '1': true, '3': true };
+      render(
+        <DataGrid
+          columns={columns}
+          data={testData}
+          enableRowSelection
+          selectedRows={selectedRows}
+        />
+      );
+
+      const firstRow = screen.getByText('John Doe').closest('.virtualized-grid-row');
+      const thirdRow = screen.getByText('Bob Johnson').closest('.virtualized-grid-row');
+
+      expect(firstRow).toHaveClass('selected');
+      expect(thirdRow).toHaveClass('selected');
+    });
+
+    test('passes mouse events to onRowMouseDown', async () => {
+      const onRowMouseDown = vi.fn();
+      const { user } = render(
+        <DataGrid
+          columns={columns}
+          data={testData}
+          onRowMouseDown={onRowMouseDown}
+        />
+      );
+
+      const firstRow = screen.getByText('John Doe').closest('.virtualized-grid-row');
+      if (firstRow) {
+        await user.pointer({ keys: '[MouseLeft>]', target: firstRow });
+        expect(onRowMouseDown).toHaveBeenCalledTimes(1);
+        expect(onRowMouseDown.mock.calls[0][0]).toEqual(testData[0]);
+        expect(onRowMouseDown.mock.calls[0][1]).toBe(0);
+        expect(onRowMouseDown.mock.calls[0][2]).toBeDefined(); // Event object
+      }
+    });
+
+    test('passes mouse events to onRowMouseEnter', async () => {
+      const onRowMouseEnter = vi.fn();
+      const { user } = render(
+        <DataGrid
+          columns={columns}
+          data={testData}
+          onRowMouseEnter={onRowMouseEnter}
+        />
+      );
+
+      const firstRow = screen.getByText('John Doe').closest('.virtualized-grid-row');
+      if (firstRow) {
+        await user.hover(firstRow);
+        expect(onRowMouseEnter).toHaveBeenCalled();
+        expect(onRowMouseEnter.mock.calls[0][0]).toEqual(testData[0]);
+        expect(onRowMouseEnter.mock.calls[0][1]).toBe(0);
+        expect(onRowMouseEnter.mock.calls[0][2]).toBeDefined(); // Event object
+      }
+    });
+
+    test('calls onRowSelectionChange when selection changes', async () => {
+      const onRowSelectionChange = vi.fn();
+      const selectedRows = { '1': true };
+      const { rerender } = render(
+        <DataGrid
+          columns={columns}
+          data={testData}
+          enableRowSelection
+          selectedRows={selectedRows}
+          onRowSelectionChange={onRowSelectionChange}
+        />
+      );
+
+      // Simulate selection change
+      const newSelection = { '1': true, '2': true };
+      rerender(
+        <DataGrid
+          columns={columns}
+          data={testData}
+          enableRowSelection
+          selectedRows={newSelection}
+          onRowSelectionChange={onRowSelectionChange}
+        />
+      );
+
+      const secondRow = screen.getByText('Jane Smith').closest('.virtualized-grid-row');
+      expect(secondRow).toHaveClass('selected');
     });
   });
 

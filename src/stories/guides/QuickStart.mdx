@@ -14,26 +14,26 @@ npm install @your-org/virtualized-grid
 ### 1. Define Your Columns
 
 ```tsx
-import { ColumnDef } from './types';
+import { ColumnDef } from "./types";
 
 const columns: ColumnDef[] = [
   {
-    id: 'id',
-    key: 'id',
-    header: 'ID',
-    width: 80
+    id: "id",
+    key: "id",
+    header: "ID",
+    width: 80,
   },
   {
-    id: 'name',
-    key: 'name',
-    header: 'Name',
-    width: 200
+    id: "name",
+    key: "name",
+    header: "Name",
+    width: 200,
   },
   {
-    id: 'email',
-    key: 'email',
-    header: 'Email',
-    width: 250
+    id: "email",
+    key: "email",
+    header: "Email",
+    width: 250,
   },
 ];
 ```
@@ -42,8 +42,8 @@ const columns: ColumnDef[] = [
 
 ```tsx
 const data = [
-  { id: 1, name: 'John Doe', email: 'john@example.com' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
+  { id: 1, name: "John Doe", email: "john@example.com" },
+  { id: 2, name: "Jane Smith", email: "jane@example.com" },
   // ... more rows
 ];
 ```
@@ -51,15 +51,12 @@ const data = [
 ### 3. Render the Grid
 
 ```tsx
-import { VirtualizedGridEnhancedV2 } from './VirtualizedGridEnhancedV2';
+import { VirtualizedGridEnhancedV2 } from "./VirtualizedGridEnhancedV2";
 
 function MyComponent() {
   return (
-    <div style={{ height: '600px' }}>
-      <VirtualizedGridEnhancedV2
-        columns={columns}
-        data={data}
-      />
+    <div style={{ height: "600px" }}>
+      <VirtualizedGridEnhancedV2 columns={columns} data={data} />
     </div>
   );
 }
@@ -95,7 +92,7 @@ const [pageSize, setPageSize] = useState(20);
     onPageChange: setPageIndex,
     onPageSizeChange: setPageSize,
   }}
-/>
+/>;
 ```
 
 ### Enable Grouping
@@ -112,7 +109,7 @@ const [groupingState, setGroupingState] = useState({
   enableGrouping
   groupingState={groupingState}
   onGroupingChange={setGroupingState}
-/>
+/>;
 ```
 
 ### Enable Column Resizing
@@ -126,15 +123,15 @@ const [columnWidths, setColumnWidths] = useState({});
   enableColumnResize
   columnWidths={columnWidths}
   onColumnWidthsChange={setColumnWidths}
-/>
+/>;
 ```
 
 ## Complete Example
 
 ```tsx
-import { useState, useMemo } from 'react';
-import { VirtualizedGridEnhancedV2 } from './VirtualizedGridEnhancedV2';
-import type { ColumnDef, SortState } from './types';
+import { useState, useMemo } from "react";
+import { VirtualizedGridEnhancedV2 } from "./VirtualizedGridEnhancedV2";
+import type { ColumnDef, SortState } from "./types";
 
 function DataGrid() {
   // State
@@ -143,33 +140,54 @@ function DataGrid() {
   const [pageSize, setPageSize] = useState(20);
 
   // Columns definition
-  const columns: ColumnDef[] = useMemo(() => [
-    { id: 'id', key: 'id', header: 'ID', width: 80, enableSorting: true },
-    { id: 'name', key: 'name', header: 'Name', width: 200, enableSorting: true },
-    { id: 'email', key: 'email', header: 'Email', width: 250 },
-    {
-      id: 'status',
-      key: 'status',
-      header: 'Status',
-      width: 120,
-      enableSorting: true,
-      render: (row) => (
-        <span className={row.status === 'active' ? 'text-green-600' : 'text-gray-400'}>
-          {row.status}
-        </span>
-      )
-    },
-  ], []);
+  const columns: ColumnDef[] = useMemo(
+    () => [
+      { id: "id", key: "id", header: "ID", width: 80, enableSorting: true },
+      {
+        id: "name",
+        key: "name",
+        header: "Name",
+        width: 200,
+        enableSorting: true,
+      },
+      { id: "email", key: "email", header: "Email", width: 250 },
+      {
+        id: "status",
+        key: "status",
+        header: "Status",
+        width: 120,
+        enableSorting: true,
+        render: (row) => (
+          <span
+            className={
+              row.status === "active" ? "text-green-600" : "text-gray-400"
+            }
+          >
+            {row.status}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
 
   // Data (use useMemo to prevent regeneration on re-renders!)
-  const data = useMemo(() => [
-    { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'inactive' },
-    // ... more rows
-  ], []);
+  const data = useMemo(
+    () => [
+      { id: 1, name: "John Doe", email: "john@example.com", status: "active" },
+      {
+        id: 2,
+        name: "Jane Smith",
+        email: "jane@example.com",
+        status: "inactive",
+      },
+      // ... more rows
+    ],
+    []
+  );
 
   return (
-    <div style={{ height: '600px' }}>
+    <div style={{ height: "600px" }}>
       <VirtualizedGridEnhancedV2
         columns={columns}
         data={data}
@@ -238,6 +256,6 @@ Ensure each row has a unique identifier:
 
 ## Next Steps
 
-- Explore [Customization Guide](/docs/guides-customization--docs) for theming
+- Explore [Customization Guide](/docs/Guides-customization--docs) for theming
 - Check out [Feature Examples](/story/examples-sorting--default) for detailed examples
-- Review [API Reference](/docs/guides-api-reference--docs) for all available props
+- Review [API Reference](/docs/Guides-api-reference--docs) for all available props

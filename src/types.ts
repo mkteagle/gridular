@@ -12,6 +12,7 @@ export interface ColumnDef<T = any> {
   enableFiltering?: boolean;
   enableResize?: boolean;
   enableGrouping?: boolean;
+  enableColumnMenu?: boolean; // Enable overflow menu for this column
   filterFn?: (row: T, columnId: string, filterValue: string) => boolean;
   sortFn?: (a: T, b: T, columnId: string) => number;
 
@@ -27,8 +28,31 @@ export interface ColumnDef<T = any> {
   render?: (row: T) => ReactNode;
   groupFormatter?: (value: any) => string;
 
+  // Custom filter UI
+  renderFilterMenu?: (props: FilterMenuRenderProps<T>) => ReactNode;
+
+  // Custom column menu items
+  columnMenuItems?: ColumnMenuItem[];
+
   // Internal
   index?: number;
+}
+
+export interface FilterMenuRenderProps<T = any> {
+  column: ColumnDef<T>;
+  filterValue: string;
+  onFilterChange: (value: string) => void;
+  onClose: () => void;
+  isFiltered: boolean;
+}
+
+export interface ColumnMenuItem {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  onClick: (columnId: string) => void;
+  disabled?: boolean;
+  danger?: boolean;
 }
 
 export interface SortState {
@@ -120,6 +144,18 @@ export interface GridClasses {
   groupManagerItemStyle?: CSSObject;
   filterMenu?: string;
   filterMenuStyle?: CSSObject;
+  filterMenuHeader?: string;
+  filterMenuHeaderStyle?: CSSObject;
+  filterMenuInput?: string;
+  filterMenuInputStyle?: CSSObject;
+  filterMenuActions?: string;
+  filterMenuActionsStyle?: CSSObject;
+  columnMenu?: string;
+  columnMenuStyle?: CSSObject;
+  columnMenuTrigger?: string;
+  columnMenuTriggerStyle?: CSSObject;
+  columnMenuItem?: string;
+  columnMenuItemStyle?: CSSObject;
 
   // Resize handle
   resizeHandle?: string;
@@ -172,6 +208,7 @@ export interface VirtualizedGridProps<T = any> {
   filterState?: FilterState;
   onFilterChange?: (filterState: FilterState) => void;
   enableFiltering?: boolean; // Default: false
+  renderFilterMenu?: (props: FilterMenuRenderProps) => ReactNode; // Custom filter menu renderer
 
   // Row Selection
   selectedRows?: RowSelectionState;
@@ -192,6 +229,11 @@ export interface VirtualizedGridProps<T = any> {
   enableColumnReorder?: boolean; // Default: false
   columnOrder?: string[];
   onColumnOrderChange?: (order: string[]) => void;
+
+  // Column Menu
+  enableColumnMenu?: boolean; // Default: false - enables overflow menu on columns
+  defaultColumnMenuItems?: ColumnMenuItem[]; // Default menu items for all columns
+  onColumnAction?: (action: string, columnId: string) => void; // Callback for column actions
 
   // Grouping
   enableGrouping?: boolean; // Default: false
@@ -223,7 +265,9 @@ export interface VirtualizedGridProps<T = any> {
   renderFilterIcon?: (props: { isFiltered: boolean }) => ReactNode;
 
   // Callbacks
-  onRowClick?: (row: T, index: number) => void;
+  onRowClick?: (row: T, index: number, event: React.MouseEvent<HTMLDivElement>) => void;
+  onRowMouseDown?: (row: T, index: number, event: React.MouseEvent<HTMLDivElement>) => void;
+  onRowMouseEnter?: (row: T, index: number, event: React.MouseEvent<HTMLDivElement>) => void;
   getRowId?: (row: T) => string;
   onScroll?: (event: { scrollTop: number; scrollHeight: number; clientHeight: number; scrollPercentage: number }) => void;
 
