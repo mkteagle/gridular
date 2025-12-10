@@ -32,12 +32,6 @@ importers:
       lucide-react:
         specifier: ^0.559.0
         version: 0.559.0(react@19.2.1)
-      react:
-        specifier: ^19.2.1
-        version: 19.2.1
-      react-dom:
-        specifier: ^19.2.1
-        version: 19.2.1(react@19.2.1)
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -108,6 +102,12 @@ importers:
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
+      react:
+        specifier: ^19.2.1
+        version: 19.2.1
+      react-dom:
+        specifier: ^19.2.1
+        version: 19.2.1(react@19.2.1)
       storybook:
         specifier: ^10.1.6
         version: 10.1.6(@testing-library/dom@10.4.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
