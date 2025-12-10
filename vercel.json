@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm run build-storybook",
+  "outputDirectory": "storybook-static",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/potterdb/:path*",
+      "destination": "https://api.potterdb.com/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/potterdb/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=3600, stale-while-revalidate"
+        }
+      ]
+    }
+  ]
+}
