@@ -1,0 +1,72 @@
+/* ALL imports must come first */
+@import "tailwindcss";
+@import './DataGrid.css';
+
+/* Tailwind v4 custom theme */
+@theme {
+  --color-ivory: #faf8f6;
+  --color-ivory-dark: #f0ede9;
+  --color-charcoal: #1a1a1a;
+  --color-charcoal-light: #2a2a2a;
+  --color-copper: #b87333;
+  --color-copper-light: #d4935a;
+  --color-copper-dark: #9a5e28;
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .bg-ivory {
+    background-color: var(--vg-ivory);
+  }
+  .bg-ivory-dark {
+    background-color: var(--vg-ivory-dark);
+  }
+  .bg-charcoal {
+    background-color: var(--vg-charcoal);
+  }
+  .bg-charcoal-light {
+    background-color: var(--vg-charcoal-light);
+  }
+  .bg-copper {
+    background-color: var(--vg-copper);
+  }
+  .bg-copper-light {
+    background-color: var(--vg-copper-light);
+  }
+  .bg-copper-dark {
+    background-color: var(--vg-copper-dark);
+  }
+
+  .text-ivory {
+    color: var(--vg-ivory);
+  }
+  .text-charcoal {
+    color: var(--vg-charcoal);
+  }
+  .text-copper {
+    color: var(--vg-copper);
+  }
+  .text-copper-light {
+    color: var(--vg-copper-light);
+  }
+  .text-copper-dark {
+    color: var(--vg-copper-dark);
+  }
+
+  .border-vg-border {
+    border-color: var(--vg-border);
+  }
+  .border-copper {
+    border-color: var(--vg-copper);
+  }
+  .border-copper-light {
+    border-color: var(--vg-copper-light);
+  }
+
+  .font-display {
+    font-family: var(--vg-font-display);
+  }
+  .font-ui {
+    font-family: var(--vg-font-ui);
+  }
+}

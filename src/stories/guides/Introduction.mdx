@@ -1,0 +1,87 @@
+# Virtualized Grid
+
+A high-performance, feature-rich data grid component for React with virtualization support.
+
+## Overview
+
+The Virtualized Grid is a comprehensive solution for displaying large datasets with optimal performance. It combines the power of TanStack Virtual for efficient rendering with a rich set of features for data manipulation and presentation.
+
+## Key Features
+
+### 🚀 **Performance**
+- **Virtualization**: Only renders visible rows for optimal performance with large datasets
+- **Smart Thresholds**: Automatically enables virtualization when data exceeds configurable thresholds
+- **Efficient Updates**: Optimized re-rendering using React memoization
+
+### 📊 **Data Management**
+- **Sorting**: Click column headers to sort data (ascending → descending → none)
+- **Filtering**: Filter data by column values
+- **Grouping**: Group data by one or multiple columns with collapsible groups
+- **Pagination**: Built-in pagination controls that work seamlessly with virtualization
+
+### 🎨 **Customization**
+- **Dual Styling**: Supports both Tailwind CSS classes and TSS-React inline styles
+- **Theme Support**: Easy to create custom themes (dark mode, minimal, playful, etc.)
+- **Custom Components**: Replace default renderers with your own components
+- **Flexible Layout**: Customizable column widths, row heights, and spacing
+
+### 🔧 **Advanced Features**
+- **Column Management**: Show/hide columns, reorder columns, resize columns
+- **Row Expansion**: Expandable rows with custom content (works with virtualization!)
+- **Cell Selection**: Click to select individual cells
+- **Row Selection**: Select single or multiple rows
+- **Persistence**: Grid state saved to localStorage automatically
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│         VirtualizedGrid                  │
+│  ┌────────────────────────────────────┐ │
+│  │  Header (Sortable, Resizable)      │ │
+│  ├────────────────────────────────────┤ │
+│  │  Body (Virtualized or Standard)    │ │
+│  │  - Only visible rows rendered      │ │
+│  │  - Smooth scrolling                │ │
+│  │  - Expandable row support          │ │
+│  ├────────────────────────────────────┤ │
+│  │  Footer (Pagination)               │ │
+│  └────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+
+## When to Use
+
+### ✅ Perfect For:
+- Large datasets (1000+ rows)
+- Complex data tables with sorting/filtering
+- Dashboards and admin panels
+- Data-heavy applications
+- Applications requiring custom themes
+
+### ❌ Consider Alternatives For:
+- Simple lists (< 20 items)
+- Static data displays
+- Mobile-first applications (consider mobile-optimized tables)
+
+## Getting Started
+
+Check out the guides in the sidebar:
+- **Quick Start**: Get up and running in 5 minutes
+- **Customization**: Learn how to theme and style the grid
+- **Features**: Deep dive into each feature
+- **API Reference**: Complete API documentation
+
+## Browser Support
+
+- Chrome/Edge: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+
+## Performance Tips
+
+1. **Use `useMemo`** for data generation to prevent re-renders
+2. **Enable virtualization** for datasets > 50 rows
+3. **Optimize render functions** - avoid creating new objects/functions on each render
+4. **Use column memoization** - define columns outside component or with `useMemo`
+5. **Consider pagination** for very large datasets (10,000+ rows)

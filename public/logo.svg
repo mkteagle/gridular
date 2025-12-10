@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="74" y1="74" x2="438" y2="438" gradientUnits="userSpaceOnUse">
+<stop stop-color="#292E49"/>
+<stop offset="0.5" stop-color="#536976"/>
+<stop offset="1" stop-color="#BBD2C5"/>
+</linearGradient>
+</defs>
+<g fill="url(#paint0_linear)">
+<!-- Top Row -->
+<rect x="154" y="74" width="90" height="90" rx="12"/>
+<rect x="256" y="74" width="90" height="90" rx="12"/>
+<rect x="358" y="74" width="90" height="90" rx="12"/>
+<!-- Middle Row Left -->
+<rect x="74" y="176" width="90" height="90" rx="12"/>
+<!-- Middle Row Right (The G crossbar part) -->
+<rect x="256" y="256" width="90" height="90" rx="12"/>
+<rect x="358" y="256" width="90" height="90" rx="12"/>
+<!-- Bottom Row Left -->
+<rect x="74" y="278" width="90" height="90" rx="12"/>
+<!-- Bottom Row -->
+<rect x="154" y="358" width="90" height="90" rx="12"/>
+<rect x="256" y="358" width="90" height="90" rx="12"/>
+<rect x="358" y="358" width="90" height="90" rx="12"/>
+</g>
+</svg>

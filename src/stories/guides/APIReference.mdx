@@ -1,0 +1,509 @@
+# API Reference
+
+Complete API documentation for the Virtualized Grid component.
+
+## Props
+
+### Data Props
+
+#### `columns` (required)
+```tsx
+columns: ColumnDef<T>[]
+```
+Array of column definitions. Each column defines how data should be displayed.
+
+#### `data` (required)
+```tsx
+data: T[]
+```
+Array of data objects to display in the grid.
+
+---
+
+### Pagination Props
+
+#### `pagination`
+```tsx
+pagination?: {
+  pageIndex: number;
+  pageSize: number;
+  totalRows: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
+}
+```
+Enable pagination with these options. When provided, shows pagination controls at the bottom of the grid.
+
+**Example:**
+```tsx
+pagination={{
+  pageIndex: 0,
+  pageSize: 20,
+  totalRows: 1000,
+  onPageChange: (page) => setPageIndex(page),
+  onPageSizeChange: (size) => setPageSize(size),
+  pageSizeOptions: [10, 20, 50, 100]
+}}
+```
+
+#### `virtualizationThreshold`
+```tsx
+virtualizationThreshold?: number
+```
+**Default:** `20`
+
+Number of rows after which virtualization is automatically enabled. Set to `Infinity` to disable virtualization.
+
+---
+
+### Virtualization Props
+
+#### `rowHeight`
+```tsx
+rowHeight?: number
+```
+**Default:** `72`
+
+Height in pixels for each row. Used for virtualization calculations.
+
+#### `overscan`
+```tsx
+overscan?: number
+```
+**Default:** `5`
+
+Number of rows to render outside the visible area for smooth scrolling.
+
+---
+
+### Sorting Props
+
+#### `enableSorting`
+```tsx
+enableSorting?: boolean
+```
+**Default:** `false`
+
+Enable column sorting. Click headers to sort (asc → desc → none).
+
+#### `sortState`
+```tsx
+sortState?: SortState | null
+```
+```tsx
+type SortState = {
+  column: string;
+  direction: 'asc' | 'desc';
+}
+```
+Controlled sort state. Use with `onSortChange` for controlled sorting.
+
+#### `onSortChange`
+```tsx
+onSortChange?: (sortState: SortState | null) => void
+```
+Callback when sort state changes. Receives `null` when sorting is cleared.
+
+#### `sortIconVariant`
+```tsx
+sortIconVariant?: 'arrows' | 'chevrons'
+```
+**Default:** `'arrows'`
+
+Style of sort indicator icons.
+
+---
+
+### Filtering Props
+
+#### `enableFiltering`
+```tsx
+enableFiltering?: boolean
+```
+**Default:** `false`
+
+Enable column filtering.
+
+#### `filterState`
+```tsx
+filterState?: FilterState
+```
+```tsx
+type FilterState = {
+  [columnId: string]: string;
+}
+```
+Controlled filter state.
+
+#### `onFilterChange`
+```tsx
+onFilterChange?: (filterState: FilterState) => void
+```
+Callback when filters change.
+
+---
+
+### Row Selection Props
+
+#### `enableRowSelection`
+```tsx
+enableRowSelection?: boolean
+```
+**Default:** `false`
+
+Enable row selection.
+
+#### `selectedRows`
+```tsx
+selectedRows?: RowSelectionState
+```
+```tsx
+type RowSelectionState = {
+  [rowId: string]: boolean;
+}
+```
+Controlled selected rows state.
+
+#### `onRowSelectionChange`
+```tsx
+onRowSelectionChange?: (selectedRows: RowSelectionState) => void
+```
+Callback when row selection changes.
+
+---
+
+### Cell Selection Props
+
+#### `enableCellSelection`
+```tsx
+enableCellSelection?: boolean
+```
+**Default:** `false`
+
+Enable individual cell selection.
+
+#### `selectedCell`
+```tsx
+selectedCell?: { rowId: string; columnId: string } | null
+```
+Controlled selected cell state.
+
+#### `onCellSelect`
+```tsx
+onCellSelect?: (rowId: string, columnId: string) => void
+```
+Callback when a cell is selected.
+
+---
+
+### Column Resize Props
+
+#### `enableColumnResize`
+```tsx
+enableColumnResize?: boolean
+```
+**Default:** `false`
+
+Enable column resizing by dragging column edges.
+
+#### `columnWidths`
+```tsx
+columnWidths?: Record<string, number>
+```
+Controlled column widths state.
+
+#### `onColumnWidthsChange`
+```tsx
+onColumnWidthsChange?: (widths: Record<string, number>) => void
+```
+Callback when column widths change.
+
+---
+
+### Column Reorder Props
+
+#### `enableColumnReorder`
+```tsx
+enableColumnReorder?: boolean
+```
+**Default:** `false`
+
+Enable column reordering by dragging headers.
+
+#### `columnOrder`
+```tsx
+columnOrder?: string[]
+```
+Controlled column order state (array of column IDs).
+
+#### `onColumnOrderChange`
+```tsx
+onColumnOrderChange?: (order: string[]) => void
+```
+Callback when column order changes.
+
+---
+
+### Grouping Props
+
+#### `enableGrouping`
+```tsx
+enableGrouping?: boolean
+```
+**Default:** `false`
+
+Enable data grouping by columns.
+
+#### `groupingState`
+```tsx
+groupingState?: GroupingState
+```
+```tsx
+type GroupingState = {
+  groupByColumns: string[];
+  expandedGroups: Record<string, boolean>;
+}
+```
+Controlled grouping state.
+
+#### `onGroupingChange`
+```tsx
+onGroupingChange?: (groupingState: GroupingState) => void
+```
+Callback when grouping state changes.
+
+#### `renderGroupRow`
+```tsx
+renderGroupRow?: (props: GroupRowRenderProps) => ReactNode
+```
+Custom renderer for group rows.
+
+---
+
+### Expandable Rows Props
+
+#### `enableExpandableRows`
+```tsx
+enableExpandableRows?: boolean
+```
+**Default:** `false`
+
+Enable expandable rows with custom content.
+
+#### `expandedRows`
+```tsx
+expandedRows?: Record<string, boolean>
+```
+Controlled expanded rows state.
+
+#### `onExpandedRowsChange`
+```tsx
+onExpandedRowsChange?: (expandedRows: Record<string, boolean>) => void
+```
+Callback when expanded rows change.
+
+#### `renderExpandedRow`
+```tsx
+renderExpandedRow?: (row: T) => ReactNode
+```
+Custom renderer for expanded row content.
+
+---
+
+### Styling Props
+
+#### `className`
+```tsx
+className?: string
+```
+Additional CSS class for the grid container.
+
+#### `classes`
+```tsx
+classes?: GridClasses
+```
+Comprehensive styling object. See [Customization Guide](/docs/guides-customization--docs) for all available classes.
+
+---
+
+### Custom Rendering Props
+
+#### `renderCell`
+```tsx
+renderCell?: (props: { value: any; row: T; column: ColumnDef<T> }) => ReactNode
+```
+Global custom cell renderer. Overrides default cell rendering.
+
+#### `renderHeader`
+```tsx
+renderHeader?: (props: { column: ColumnDef<T>; sortDirection?: SortDirection }) => ReactNode
+```
+Custom header renderer.
+
+#### `renderSortIcon`
+```tsx
+renderSortIcon?: (props: { isSorted: boolean; sortDirection?: SortDirection }) => ReactNode
+```
+Custom sort icon renderer.
+
+#### `renderFilterIcon`
+```tsx
+renderFilterIcon?: (props: { isFiltered: boolean }) => ReactNode
+```
+Custom filter icon renderer.
+
+---
+
+### Callback Props
+
+#### `onRowClick`
+```tsx
+onRowClick?: (row: T, index: number) => void
+```
+Callback when a row is clicked.
+
+#### `getRowId`
+```tsx
+getRowId?: (row: T) => string
+```
+**Default:** `(row) => String(row.id)`
+
+Function to extract unique row ID from row data.
+
+---
+
+### Advanced Props
+
+#### `gridId`
+```tsx
+gridId?: string
+```
+**Default:** `'default-grid'`
+
+Unique identifier for the grid. Used for localStorage persistence.
+
+#### `hideColumnManager`
+```tsx
+hideColumnManager?: boolean
+```
+**Default:** `false`
+
+Hide the column management button.
+
+#### `hideGroupControls`
+```tsx
+hideGroupControls?: boolean
+```
+**Default:** `false`
+
+Hide the grouping controls button.
+
+#### `isLoading`
+```tsx
+isLoading?: boolean
+```
+**Default:** `false`
+
+Show loading state.
+
+#### `emptyMessage`
+```tsx
+emptyMessage?: string
+```
+**Default:** `'No data available'`
+
+Message shown when no data is available.
+
+#### `loadingMessage`
+```tsx
+loadingMessage?: string
+```
+**Default:** `'Loading...'`
+
+Message shown during loading.
+
+---
+
+## ColumnDef Interface
+
+```tsx
+interface ColumnDef<T = any> {
+  // Required
+  id: string;
+  header: string;
+  key: string;
+
+  // Optional sizing
+  width?: number;
+
+  // Feature flags
+  enableSorting?: boolean;
+  enableFiltering?: boolean;
+  enableResize?: boolean;
+  enableGrouping?: boolean;
+
+  // Custom functions
+  filterFn?: (row: T, columnId: string, filterValue: string) => boolean;
+  sortFn?: (a: T, b: T, columnId: string) => number;
+  groupFormatter?: (value: any) => string;
+
+  // Styling
+  headerClassName?: string;
+  cellClassName?: string;
+  headerStyle?: CSSObject;
+  cellStyle?: CSSObject;
+
+  // Rendering
+  renderCell?: (row: T) => ReactNode;
+  cell?: (row: T) => ReactNode;
+  render?: (row: T) => ReactNode;
+}
+```
+
+## Usage Examples
+
+### Controlled Sorting
+```tsx
+const [sortState, setSortState] = useState<SortState | null>(null);
+
+<VirtualizedGridEnhancedV2
+  enableSorting
+  sortState={sortState}
+  onSortChange={setSortState}
+  columns={columns}
+  data={data}
+/>
+```
+
+### Controlled Pagination
+```tsx
+const [pageIndex, setPageIndex] = useState(0);
+const [pageSize, setPageSize] = useState(20);
+
+<VirtualizedGridEnhancedV2
+  columns={columns}
+  data={data}
+  pagination={{
+    pageIndex,
+    pageSize,
+    totalRows: data.length,
+    onPageChange: setPageIndex,
+    onPageSizeChange: setPageSize,
+  }}
+/>
+```
+
+### Custom Cell Rendering
+```tsx
+<VirtualizedGridEnhancedV2
+  columns={columns}
+  data={data}
+  renderCell={({ value, row, column }) => {
+    if (column.id === 'status') {
+      return <StatusBadge status={value} />;
+    }
+    return value;
+  }}
+/>
+```

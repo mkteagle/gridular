@@ -1,0 +1,297 @@
+# Customization Guide
+
+Learn how to customize the look and feel of your grid to match your application's design.
+
+## Styling System
+
+The grid supports **two styling approaches** that can be used together:
+
+1. **Tailwind CSS Classes** - Pass className strings
+2. **TSS-React Inline Styles** - Pass CSSObject style objects
+
+Both approaches use the same `classes` prop with different suffixes.
+
+## The `classes` Prop
+
+The `classes` prop accepts an object with keys for each customizable part of the grid:
+
+```tsx
+<VirtualizedGridEnhancedV2
+  columns={columns}
+  data={data}
+  classes={{
+    // Tailwind classes
+    container: 'bg-white shadow-xl',
+    // TSS-React inline styles
+    containerStyle: {
+      borderRadius: '12px',
+      padding: '1rem',
+    },
+  }}
+/>
+```
+
+## Available Customization Points
+
+### Container & Layout
+
+```tsx
+classes={{
+  // Main container
+  container: 'bg-white border-2 border-gray-200',
+  containerStyle: { borderRadius: '8px' },
+
+  // Toolbar (where controls are)
+  toolbar: 'bg-gray-50 p-4',
+  toolbarStyle: { borderBottom: '1px solid #e5e7eb' },
+}}
+```
+
+### Header
+
+```tsx
+classes={{
+  // Header row
+  header: 'bg-gradient-to-r from-blue-500 to-purple-500',
+  headerStyle: { height: '60px' },
+
+  // Individual header cells
+  headerCell: 'text-white font-bold',
+  headerCellStyle: { padding: '1rem' },
+}}
+```
+
+### Body & Rows
+
+```tsx
+classes={{
+  // Body container
+  body: 'bg-white',
+  bodyStyle: { minHeight: '400px' },
+
+  // Regular rows
+  row: 'border-b hover:bg-gray-50',
+  rowStyle: { height: '48px' },
+
+  // Selected rows
+  selectedRow: 'bg-blue-100',
+  selectedRowStyle: { fontWeight: 'bold' },
+
+  // Hovered rows
+  hoveredRow: 'bg-gray-100',
+}}
+```
+
+### Cells
+
+```tsx
+classes={{
+  // Regular cells
+  cell: 'text-gray-700 border-r',
+  cellStyle: { padding: '0.5rem' },
+
+  // Selected cells
+  selectedCell: 'ring-2 ring-blue-500',
+  selectedCellStyle: { backgroundColor: '#eff6ff' },
+}}
+```
+
+### Group Manager
+
+```tsx
+classes={{
+  // Container
+  groupManager: 'mr-2',
+  groupManagerStyle: { display: 'inline-block' },
+
+  // Trigger button
+  groupManagerTrigger: 'bg-purple-500 text-white hover:bg-purple-600',
+  groupManagerTriggerStyle: {
+    borderRadius: '8px',
+    padding: '0.75rem 1.5rem'
+  },
+
+  // Dropdown content
+  groupManagerContent: 'bg-purple-50 border-purple-300',
+  groupManagerContentStyle: {
+    minWidth: '250px',
+    borderRadius: '8px'
+  },
+
+  // Menu items
+  groupManagerItem: 'hover:bg-purple-100 text-purple-900',
+  groupManagerItemStyle: {
+    padding: '0.75rem',
+    borderRadius: '4px'
+  },
+}}
+```
+
+### Column Manager
+
+```tsx
+classes={{
+  // Trigger button
+  columnManagerTrigger: 'bg-blue-500 text-white hover:bg-blue-600',
+  columnManagerTriggerStyle: {
+    borderRadius: '8px',
+    padding: '0.75rem 1.5rem'
+  },
+
+  // Dropdown content
+  columnManagerContent: 'bg-blue-50 border-blue-300',
+  columnManagerContentStyle: {
+    minWidth: '250px',
+    borderRadius: '8px'
+  },
+
+  // Menu items
+  columnManagerItem: 'hover:bg-blue-100 text-blue-900',
+  columnManagerItemStyle: {
+    padding: '0.75rem',
+    borderRadius: '4px'
+  },
+}}
+```
+
+### Pagination
+
+```tsx
+classes={{
+  // Pagination container
+  pagination: 'bg-gray-50 border-t',
+  paginationStyle: { padding: '1rem' },
+
+  // Navigation buttons
+  paginationButton: 'bg-blue-500 text-white hover:bg-blue-600',
+  paginationButtonStyle: { borderRadius: '4px' },
+
+  // Page info text
+  pageInfo: 'text-gray-600 font-medium',
+}}
+```
+
+### Other Elements
+
+```tsx
+classes={{
+  // Resize handle
+  resizeHandle: 'bg-blue-500',
+  resizeHandleStyle: { width: '4px' },
+
+  // Sort icons
+  sortIcon: 'text-blue-500',
+  sortIconStyle: { marginLeft: '4px' },
+
+  // Empty state
+  emptyState: 'text-center text-gray-500 py-8',
+
+  // Loading state
+  loadingState: 'text-center text-blue-500 py-8',
+}}
+```
+
+## Theme Examples
+
+### Dark Theme
+
+```tsx
+const darkTheme = {
+  container: 'bg-gray-900 border border-gray-700',
+  header: 'bg-gray-800 border-b border-gray-700',
+  headerCell: 'text-gray-100',
+  body: 'bg-gray-900',
+  row: 'border-b border-gray-800 hover:bg-gray-800/50',
+  cell: 'text-gray-200',
+  groupManagerTrigger: 'bg-gray-700 text-gray-100 hover:bg-gray-600',
+  groupManagerContent: 'bg-gray-800 border-gray-600',
+  columnManagerTrigger: 'bg-gray-700 text-gray-100 hover:bg-gray-600',
+  columnManagerContent: 'bg-gray-800 border-gray-600',
+};
+
+<VirtualizedGridEnhancedV2 classes={darkTheme} ... />
+```
+
+### Minimal Theme
+
+```tsx
+const minimalTheme = {
+  container: 'bg-white border-0',
+  header: 'bg-white border-b-2 border-black',
+  headerCell: 'text-black font-bold uppercase text-xs tracking-wider',
+  body: 'bg-white',
+  row: 'border-b border-gray-200',
+  cell: 'text-gray-800',
+  columnManagerTrigger: 'bg-black text-white hover:bg-gray-800 rounded-none uppercase',
+};
+
+<VirtualizedGridEnhancedV2 classes={minimalTheme} ... />
+```
+
+### Playful/Colorful Theme
+
+```tsx
+const playfulTheme = {
+  container: 'bg-white/90 backdrop-blur shadow-2xl',
+  containerStyle: { borderRadius: '20px' },
+  header: 'bg-gradient-to-r from-pink-400 to-purple-400',
+  headerCell: 'text-white font-bold',
+  row: 'border-b border-purple-100 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50',
+  groupManagerTrigger: 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg',
+  groupManagerTriggerStyle: { borderRadius: '20px' },
+  columnManagerTrigger: 'bg-gradient-to-r from-green-400 to-teal-400 text-white shadow-lg',
+  columnManagerTriggerStyle: { borderRadius: '20px' },
+};
+
+<VirtualizedGridEnhancedV2 classes={playfulTheme} ... />
+```
+
+## Custom Column Styling
+
+You can also style individual columns:
+
+```tsx
+const columns: ColumnDef[] = [
+  {
+    id: 'status',
+    key: 'status',
+    header: 'Status',
+    // Column-specific classes
+    headerClassName: 'bg-green-100',
+    cellClassName: 'font-bold',
+    // Column-specific inline styles
+    headerStyle: { backgroundColor: '#f0fdf4' },
+    cellStyle: { fontWeight: 600 },
+  },
+];
+```
+
+## Dynamic Styling
+
+Apply styles conditionally based on data:
+
+```tsx
+<VirtualizedGridEnhancedV2
+  renderCell={({ value, row, column }) => {
+    if (column.id === 'status') {
+      const color = row.status === 'active' ? 'text-green-600' : 'text-red-600';
+      return <span className={color}>{value}</span>;
+    }
+    return value;
+  }}
+/>
+```
+
+## Tips
+
+1. **Start with the default theme** and override specific parts
+2. **Use CSS variables** for colors to make theme switching easier
+3. **Test your theme in different screen sizes** for responsiveness
+4. **Consider accessibility** - ensure sufficient color contrast
+5. **Use the Storybook examples** as starting points for your themes
+
+## Next Steps
+
+- See [Theme Examples](/story/customization-dark-theme--default) in action
+- Learn about [Custom Renderers](/docs/guides-custom-renderers--docs)
+- Explore the [API Reference](/docs/guides-api-reference--docs)
