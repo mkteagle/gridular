@@ -191,7 +191,7 @@ export const MultiRowSelection: Story = {
       setLastSelectedIndex(index);
     };
 
-    const handleMouseEnter = (item: any, index: number) => {
+    const handleMouseEnter = (_item: any, index: number) => {
       if (!isDragging || dragStartIndex === null) return;
 
       const currentIndex = index;
@@ -200,7 +200,7 @@ export const MultiRowSelection: Story = {
       const start = Math.min(dragStartIndex, currentIndex);
       const end = Math.max(dragStartIndex, currentIndex);
 
-      setSelectedRows((prev) => {
+      setSelectedRows((_prev) => {
         const newSelection = { ...initialSelection }; // Start from initial state
 
         // Apply the drag action to all rows in the current range

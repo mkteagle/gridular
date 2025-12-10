@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, within, waitFor } from './utils';
+import { render, screen } from './utils';
 import { DataGrid } from '../DataGrid';
 import { ColumnDef } from '../types';
 import { describe, test, expect, vi } from 'vitest';
@@ -377,7 +376,7 @@ describe('DataGrid Component', () => {
 
     test('changes page size', async () => {
       const onPageSizeChange = vi.fn();
-      const { user } = render(
+      render(
         <DataGrid
           columns={columns}
           data={testData}

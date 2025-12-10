@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/react-vite'
 import '../src/index.css';
+import packageJson from '../package.json';
 
 const preview: Preview = {
   parameters: {
@@ -18,6 +19,12 @@ const preview: Preview = {
     },
 
     layout: 'padded', // Add padding to all stories by default
+
+    docs: {
+      toc: {
+        title: `Gridular v${packageJson.version}`,
+      },
+    },
   },
 };
 

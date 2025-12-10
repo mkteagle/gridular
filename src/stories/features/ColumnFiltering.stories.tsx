@@ -174,7 +174,7 @@ export const CustomFilterFunctions: Story = {
         width: 120,
         renderCell: (row) => `$${row.salary.toLocaleString()}`,
         // Custom filter: filter by minimum salary (numeric comparison)
-        filterFn: (row, columnId, filterValue) => {
+        filterFn: (row, _columnId, filterValue) => {
           const minSalary = parseInt(filterValue);
           if (isNaN(minSalary)) return true;
           return row.salary >= minSalary;
@@ -199,7 +199,7 @@ export const CustomFilterFunctions: Story = {
           </span>
         ),
         // Custom filter: exact match for status
-        filterFn: (row, columnId, filterValue) => {
+        filterFn: (row, _columnId, filterValue) => {
           return row.status.toLowerCase() === filterValue.toLowerCase();
         },
       },

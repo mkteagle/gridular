@@ -32,6 +32,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const BasicContextMenu: Story = {
+  args: {
+    columns: [],
+    data: [],
+  },
   render: () => {
     const [notification, setNotification] = useState<string>('');
 
@@ -98,6 +102,10 @@ export const BasicContextMenu: Story = {
 };
 
 export const ConditionalContextMenu: Story = {
+  args: {
+    columns: [],
+    data: [],
+  },
   render: () => {
     const [notification, setNotification] = useState<string>('');
 
@@ -272,6 +280,10 @@ export const ConditionalContextMenu: Story = {
 };
 
 export const WithoutContextMenu: Story = {
+  args: {
+    columns: [],
+    data: [],
+  },
   render: () => {
     const columns = [
       { id: 'name', header: 'Name', key: 'name' },

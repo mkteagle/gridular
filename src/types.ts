@@ -34,6 +34,9 @@ export interface ColumnDef<T = any> {
   // Custom column menu items
   columnMenuItems?: ColumnMenuItem[];
 
+  // Custom column menu rendering
+  renderColumnMenu?: (props: ColumnMenuRenderProps<T>) => ReactNode;
+
   // Internal
   index?: number;
 }
@@ -48,11 +51,34 @@ export interface FilterMenuRenderProps<T = any> {
 
 export interface ColumnMenuItem {
   id: string;
-  label: string;
+  label: string | ReactNode;
   icon?: ReactNode;
   onClick: (columnId: string) => void;
   disabled?: boolean;
   danger?: boolean;
+  // Advanced customization
+  className?: string;
+  shortcut?: string; // Keyboard shortcut display
+  subMenu?: ColumnMenuItem[]; // Nested menu items
+  separator?: boolean; // Add separator before this item
+  render?: (props: ColumnMenuItemRenderProps) => ReactNode; // Full custom render
+}
+
+export interface ColumnMenuItemRenderProps {
+  item: ColumnMenuItem;
+  columnId: string;
+  isDisabled: boolean;
+  onSelect: () => void;
+}
+
+export interface ColumnMenuRenderProps<T = any> {
+  column: ColumnDef<T>;
+  items: ColumnMenuItem[];
+  defaultItems: {
+    filter?: ReactNode;
+    hideColumn?: ReactNode;
+  };
+  onClose: () => void;
 }
 
 export interface SortState {
@@ -234,6 +260,8 @@ export interface VirtualizedGridProps<T = any> {
   enableColumnMenu?: boolean; // Default: false - enables overflow menu on columns
   defaultColumnMenuItems?: ColumnMenuItem[]; // Default menu items for all columns
   onColumnAction?: (action: string, columnId: string) => void; // Callback for column actions
+  renderColumnMenu?: (props: ColumnMenuRenderProps) => ReactNode; // Custom column menu renderer
+  renderColumnMenuTrigger?: (props: { column: ColumnDef; onClick: () => void }) => ReactNode; // Custom trigger button
 
   // Grouping
   enableGrouping?: boolean; // Default: false

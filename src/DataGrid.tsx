@@ -1,7 +1,8 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, X, Filter, Search } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, X, Filter, Search, MoreVertical, EyeOff } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { cn, tssToInlineStyles } from './lib/utils';
 import { Pagination } from './Pagination';
 import { ColumnManager } from './components/ColumnManager';
@@ -17,6 +18,136 @@ import type {
   GroupingState,
 } from './types';
 import './DataGrid.css';
+import type { ColumnMenuItem } from './types';
+
+// Helper component for rendering menu items with submenu support
+interface MenuItemRendererProps {
+  item: ColumnMenuItem;
+  columnId: string;
+  onColumnAction?: (action: string, columnId: string) => void;
+  classes?: any;
+}
+
+function MenuItemRenderer({ item, columnId, onColumnAction, classes }: MenuItemRendererProps) {
+  // Use custom render if provided
+  if (item.render) {
+    return (
+      <>
+        {item.render({
+          item,
+          columnId,
+          isDisabled: !!item.disabled,
+          onSelect: () => {
+            if (!item.disabled) {
+              item.onClick(columnId);
+              onColumnAction?.(item.id, columnId);
+            }
+          },
+        })}
+      </>
+    );
+  }
+
+  // Render with submenu
+  if (item.subMenu && item.subMenu.length > 0) {
+    return (
+      <>
+        {item.separator && (
+          <DropdownMenu.Separator className="h-px bg-gradient-to-r from-transparent via-copper/30 to-transparent my-1" />
+        )}
+        <DropdownMenu.Sub>
+          <DropdownMenu.SubTrigger
+            className={cn(
+              'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded',
+              'text-xs font-medium text-charcoal cursor-pointer outline-none',
+              'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+              item.disabled && 'opacity-50 cursor-not-allowed',
+              item.danger && 'text-red-600',
+              item.className,
+              classes?.columnMenuItem
+            )}
+            disabled={item.disabled}
+          >
+            <div className="flex items-center gap-2">
+              {item.icon && <span className="flex-shrink-0 w-3 h-3">{item.icon}</span>}
+              <span>{item.label}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {item.shortcut && (
+                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-charcoal/5 rounded border border-charcoal/10">
+                  {item.shortcut}
+                </kbd>
+              )}
+              <ChevronRight className="w-3 h-3 text-charcoal/40" />
+            </div>
+          </DropdownMenu.SubTrigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.SubContent
+              className={cn(
+                'z-50 min-w-[180px] rounded-lg',
+                'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                'border-2 border-copper shadow-xl shadow-copper/20',
+                'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1',
+                'p-1',
+                classes?.columnMenu
+              )}
+              sideOffset={8}
+            >
+              {item.subMenu.map((subItem) => (
+                <MenuItemRenderer
+                  key={subItem.id}
+                  item={subItem}
+                  columnId={columnId}
+                  onColumnAction={onColumnAction}
+                  classes={classes}
+                />
+              ))}
+            </DropdownMenu.SubContent>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Sub>
+      </>
+    );
+  }
+
+  // Regular menu item
+  return (
+    <>
+      {item.separator && (
+        <DropdownMenu.Separator className="h-px bg-gradient-to-r from-transparent via-copper/30 to-transparent my-1" />
+      )}
+      <DropdownMenu.Item
+        className={cn(
+          'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded',
+          'text-xs font-medium cursor-pointer outline-none',
+          'transition-colors',
+          item.disabled && 'opacity-50 cursor-not-allowed',
+          item.danger
+            ? 'text-red-600 hover:bg-red-50 focus:bg-red-50'
+            : 'text-charcoal hover:bg-copper/10 focus:bg-copper/10',
+          item.className,
+          classes?.columnMenuItem
+        )}
+        disabled={item.disabled}
+        onSelect={() => {
+          if (!item.disabled) {
+            item.onClick(columnId);
+            onColumnAction?.(item.id, columnId);
+          }
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {item.icon && <span className="flex-shrink-0 w-3 h-3">{item.icon}</span>}
+          <span>{item.label}</span>
+        </div>
+        {item.shortcut && (
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-charcoal/5 rounded border border-charcoal/10">
+            {item.shortcut}
+          </kbd>
+        )}
+      </DropdownMenu.Item>
+    </>
+  );
+}
 
 export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   // Data
@@ -62,6 +193,14 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   columnOrder: controlledColumnOrder,
   onColumnOrderChange,
 
+  // Column Menu
+  enableColumnMenu = false,
+  defaultColumnMenuItems = [],
+  onColumnAction,
+  renderFilterMenu,
+  renderColumnMenu,
+  renderColumnMenuTrigger,
+
   // Grouping
   enableGrouping = false,
   groupingState: controlledGroupingState,
@@ -91,6 +230,8 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
 
   // Callbacks
   onRowClick,
+  onRowMouseDown,
+  onRowMouseEnter,
   getRowId = (row) => String((row as any).id),
   onScroll,
 
@@ -369,7 +510,9 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
     }
 
     // Apply sorting (only on non-group rows at the same level)
-    if (enableSorting && sortState && !enableGrouping) {
+    // When grouping is enabled but no groups are active, still allow sorting
+    const hasActiveGroups = enableGrouping && groupingState.groupByColumns.length > 0;
+    if (enableSorting && sortState && !hasActiveGroups) {
       const column = propColumns.find((col) => col.id === sortState.column);
       result.sort((a, b) => {
         if (column?.sortFn) {
@@ -642,8 +785,8 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
                   {enableSorting && renderSortIconDefault(column)}
                 </div>
 
-                {/* Compact Filter Button */}
-                {enableFiltering && columnFilteringEnabled && (
+                {/* Standalone Filter Button (when overflow menu is disabled) */}
+                {enableFiltering && columnFilteringEnabled && !enableColumnMenu && !column.enableColumnMenu && (
                   <Popover.Root
                     open={openFilterPopovers[column.id] || false}
                     onOpenChange={(open) => {
@@ -696,81 +839,562 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
                         sideOffset={6}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="p-2.5 space-y-2.5">
-                          {/* Compact Header */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <Search className="w-3 h-3 text-copper" />
-                              <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
-                                Filter {column.header}
-                              </span>
+                        {renderFilterMenu ? (
+                          renderFilterMenu({
+                            column,
+                            filterValue: filterInputValues[column.id] ?? '',
+                            onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                            onClose: () => setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: false })),
+                            isFiltered: !!isFiltered,
+                          })
+                        ) : column.renderFilterMenu ? (
+                          column.renderFilterMenu({
+                            column,
+                            filterValue: filterInputValues[column.id] ?? '',
+                            onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                            onClose: () => setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: false })),
+                            isFiltered: !!isFiltered,
+                          })
+                        ) : (
+                          <div className="p-2.5 space-y-2.5">
+                            {/* Compact Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <Search className="w-3 h-3 text-copper" />
+                                <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
+                                  Filter {column.header}
+                                </span>
+                              </div>
+                              <Popover.Close
+                                className="p-0.5 rounded hover:bg-copper/10 transition-colors"
+                              >
+                                <X className="w-3 h-3 text-charcoal/60" />
+                              </Popover.Close>
                             </div>
-                            <Popover.Close
-                              className="p-0.5 rounded hover:bg-copper/10 transition-colors"
-                            >
-                              <X className="w-3 h-3 text-charcoal/60" />
-                            </Popover.Close>
-                          </div>
 
-                          {/* Compact Input */}
-                          <input
-                            type="text"
-                            value={filterInputValues[column.id] ?? ''}
-                            onChange={(e) => {
-                              setFilterInputValues((prev) => ({
-                                ...prev,
-                                [column.id]: e.target.value,
-                              }));
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleApplyFilter(column.id);
-                              } else if (e.key === 'Escape') {
-                                setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: false }));
-                              }
-                            }}
-                            placeholder="Type to filter..."
-                            className={cn(
-                              'w-full px-2 py-1.5 text-xs',
-                              'bg-white border border-copper/20 rounded',
-                              'text-charcoal placeholder:text-charcoal/40',
-                              'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
-                              'transition-all'
-                            )}
-                            autoFocus
-                          />
-
-                          {/* Compact Actions */}
-                          <div className="flex gap-1.5">
-                            <button
-                              onClick={() => handleApplyFilter(column.id)}
+                            {/* Compact Input */}
+                            <input
+                              type="text"
+                              value={filterInputValues[column.id] ?? ''}
+                              onChange={(e) => {
+                                setFilterInputValues((prev) => ({
+                                  ...prev,
+                                  [column.id]: e.target.value,
+                                }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleApplyFilter(column.id);
+                                } else if (e.key === 'Escape') {
+                                  setOpenFilterPopovers((prev) => ({ ...prev, [column.id]: false }));
+                                }
+                              }}
+                              placeholder="Type to filter..."
                               className={cn(
-                                'flex-1 px-2 py-1.5 rounded text-[11px] font-bold',
-                                'bg-gradient-to-r from-copper to-copper-dark text-white',
-                                'shadow-sm shadow-copper/30 hover:shadow-md',
-                                'active:scale-[0.98] transition-all'
+                                'w-full px-2 py-1.5 text-xs',
+                                'bg-white border border-copper/20 rounded',
+                                'text-charcoal placeholder:text-charcoal/40',
+                                'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
+                                'transition-all',
+                                classes?.filterMenuInput
                               )}
-                            >
-                              Apply
-                            </button>
-                            {isFiltered && (
+                              autoFocus
+                            />
+
+                            {/* Compact Actions */}
+                            <div className={cn('flex gap-1.5', classes?.filterMenuActions)}>
                               <button
-                                onClick={() => handleClearFilter(column.id)}
+                                onClick={() => handleApplyFilter(column.id)}
                                 className={cn(
-                                  'px-2 py-1.5 rounded text-[11px] font-bold',
-                                  'bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70',
+                                  'flex-1 px-2 py-1.5 rounded text-[11px] font-bold',
+                                  'bg-gradient-to-r from-copper to-copper-dark text-white',
+                                  'shadow-sm shadow-copper/30 hover:shadow-md',
                                   'active:scale-[0.98] transition-all'
                                 )}
                               >
-                                Clear
+                                Apply
                               </button>
-                            )}
+                              {isFiltered && (
+                                <button
+                                  onClick={() => handleClearFilter(column.id)}
+                                  className={cn(
+                                    'px-2 py-1.5 rounded text-[11px] font-bold',
+                                    'bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70',
+                                    'active:scale-[0.98] transition-all'
+                                  )}
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         <Popover.Arrow className="fill-copper" width={12} height={6} />
                       </Popover.Content>
                     </Popover.Portal>
                   </Popover.Root>
+                )}
+
+                {/* Column Overflow Menu */}
+                {(enableColumnMenu || column.enableColumnMenu) && (
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      {renderColumnMenuTrigger ? (
+                        renderColumnMenuTrigger({
+                          column,
+                          onClick: () => {},
+                        })
+                      ) : (
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            'p-1 rounded transition-all duration-200',
+                            'hover:bg-white/15 active:scale-95',
+                            'focus:outline-none focus-visible:ring-1 focus-visible:ring-ivory/50',
+                            'text-ivory',
+                            classes?.columnMenuTrigger
+                          )}
+                          title="Column options"
+                        >
+                          <MoreVertical className="w-3 h-3 text-ivory/90 hover:text-ivory transition-colors" />
+                        </button>
+                      )}
+                    </DropdownMenu.Trigger>
+
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        className={cn(
+                          'z-50 min-w-[180px] rounded-lg',
+                          'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                          'border-2 border-copper shadow-xl shadow-copper/20',
+                          'animate-in fade-in-0 zoom-in-95',
+                          'p-1',
+                          classes?.columnMenu
+                        )}
+                        side="bottom"
+                        align="end"
+                        sideOffset={6}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Custom column menu renderer */}
+                        {(renderColumnMenu || column.renderColumnMenu) ? (
+                          <>
+                            {column.renderColumnMenu ? (
+                              column.renderColumnMenu({
+                                column,
+                                items: [...(column.columnMenuItems || []), ...(defaultColumnMenuItems || [])],
+                                defaultItems: {
+                                  filter: enableFiltering && columnFilteringEnabled ? (
+                                    <DropdownMenu.Sub>
+                                      <DropdownMenu.SubTrigger
+                                        className={cn(
+                                          'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded',
+                                          'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                          'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                          isFiltered && 'text-copper',
+                                          classes?.columnMenuItem
+                                        )}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <Filter className={cn('w-3 h-3', isFiltered && 'fill-copper')} />
+                                          <span>Filter</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                          {isFiltered && <span className="w-1.5 h-1.5 bg-copper rounded-full" />}
+                                          <ChevronRight className="w-3 h-3 text-charcoal/40" />
+                                        </div>
+                                      </DropdownMenu.SubTrigger>
+                                      <DropdownMenu.Portal>
+                                        <DropdownMenu.SubContent
+                                          className={cn(
+                                            'z-50 w-60 rounded-lg',
+                                            'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                                            'border-2 border-copper shadow-xl shadow-copper/20',
+                                            'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1',
+                                            classes?.filterMenu
+                                          )}
+                                          sideOffset={8}
+                                        >
+                                          {renderFilterMenu ? (
+                                            renderFilterMenu({
+                                              column,
+                                              filterValue: filterInputValues[column.id] ?? '',
+                                              onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                              onClose: () => {},
+                                              isFiltered: !!isFiltered,
+                                            })
+                                          ) : column.renderFilterMenu ? (
+                                            column.renderFilterMenu({
+                                              column,
+                                              filterValue: filterInputValues[column.id] ?? '',
+                                              onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                              onClose: () => {},
+                                              isFiltered: !!isFiltered,
+                                            })
+                                          ) : (
+                                            <div className="p-2.5 space-y-2.5">
+                                              <div className="flex items-center gap-1.5">
+                                                <Search className="w-3 h-3 text-copper" />
+                                                <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
+                                                  Filter {column.header}
+                                                </span>
+                                              </div>
+                                              <input
+                                                type="text"
+                                                value={filterInputValues[column.id] ?? ''}
+                                                onChange={(e) => {
+                                                  setFilterInputValues((prev) => ({
+                                                    ...prev,
+                                                    [column.id]: e.target.value,
+                                                  }));
+                                                }}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    handleApplyFilter(column.id);
+                                                  }
+                                                }}
+                                                placeholder="Type to filter..."
+                                                className={cn(
+                                                  'w-full px-2 py-1.5 text-xs',
+                                                  'bg-white border border-copper/20 rounded',
+                                                  'text-charcoal placeholder:text-charcoal/40',
+                                                  'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
+                                                  'transition-all',
+                                                  classes?.filterMenuInput
+                                                )}
+                                                autoFocus
+                                              />
+                                              <div className={cn('flex gap-1.5', classes?.filterMenuActions)}>
+                                                <button
+                                                  onClick={() => handleApplyFilter(column.id)}
+                                                  className="flex-1 px-2 py-1.5 rounded text-[11px] font-bold bg-gradient-to-r from-copper to-copper-dark text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                                                >
+                                                  Apply
+                                                </button>
+                                                {isFiltered && (
+                                                  <button
+                                                    onClick={() => handleClearFilter(column.id)}
+                                                    className="px-2 py-1.5 rounded text-[11px] font-bold bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70 active:scale-[0.98] transition-all"
+                                                  >
+                                                    Clear
+                                                  </button>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </DropdownMenu.SubContent>
+                                      </DropdownMenu.Portal>
+                                    </DropdownMenu.Sub>
+                                  ) : undefined,
+                                  hideColumn: (
+                                    <DropdownMenu.Item
+                                      className={cn(
+                                        'flex items-center gap-2 px-2.5 py-1.5 rounded',
+                                        'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                        'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                        classes?.columnMenuItem
+                                      )}
+                                      onSelect={() => {
+                                        toggleColumnVisibility(column.id, false);
+                                        onColumnAction?.('hide', column.id);
+                                      }}
+                                    >
+                                      <EyeOff className="w-3 h-3 text-charcoal/60" />
+                                      <span>Hide Column</span>
+                                    </DropdownMenu.Item>
+                                  ),
+                                },
+                                onClose: () => {},
+                              })
+                            ) : renderColumnMenu?.({
+                              column,
+                              items: [...(column.columnMenuItems || []), ...(defaultColumnMenuItems || [])],
+                              defaultItems: {
+                                filter: enableFiltering && columnFilteringEnabled ? (
+                                  <DropdownMenu.Sub>
+                                    <DropdownMenu.SubTrigger
+                                      className={cn(
+                                        'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded',
+                                        'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                        'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                        isFiltered && 'text-copper',
+                                        classes?.columnMenuItem
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Filter className={cn('w-3 h-3', isFiltered && 'fill-copper')} />
+                                        <span>Filter</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        {isFiltered && <span className="w-1.5 h-1.5 bg-copper rounded-full" />}
+                                        <ChevronRight className="w-3 h-3 text-charcoal/40" />
+                                      </div>
+                                    </DropdownMenu.SubTrigger>
+                                    <DropdownMenu.Portal>
+                                      <DropdownMenu.SubContent
+                                        className={cn(
+                                          'z-50 w-60 rounded-lg',
+                                          'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                                          'border-2 border-copper shadow-xl shadow-copper/20',
+                                          'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1',
+                                          classes?.filterMenu
+                                        )}
+                                        sideOffset={8}
+                                      >
+                                        {renderFilterMenu ? (
+                                          renderFilterMenu({
+                                            column,
+                                            filterValue: filterInputValues[column.id] ?? '',
+                                            onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                            onClose: () => {},
+                                            isFiltered: !!isFiltered,
+                                          })
+                                        ) : column.renderFilterMenu ? (
+                                          column.renderFilterMenu({
+                                            column,
+                                            filterValue: filterInputValues[column.id] ?? '',
+                                            onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                            onClose: () => {},
+                                            isFiltered: !!isFiltered,
+                                          })
+                                        ) : (
+                                          <div className="p-2.5 space-y-2.5">
+                                            <div className="flex items-center gap-1.5">
+                                              <Search className="w-3 h-3 text-copper" />
+                                              <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
+                                                Filter {column.header}
+                                              </span>
+                                            </div>
+                                            <input
+                                              type="text"
+                                              value={filterInputValues[column.id] ?? ''}
+                                              onChange={(e) => {
+                                                setFilterInputValues((prev) => ({
+                                                  ...prev,
+                                                  [column.id]: e.target.value,
+                                                }));
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                  handleApplyFilter(column.id);
+                                                }
+                                              }}
+                                              placeholder="Type to filter..."
+                                              className={cn(
+                                                'w-full px-2 py-1.5 text-xs',
+                                                'bg-white border border-copper/20 rounded',
+                                                'text-charcoal placeholder:text-charcoal/40',
+                                                'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
+                                                'transition-all',
+                                                classes?.filterMenuInput
+                                              )}
+                                              autoFocus
+                                            />
+                                            <div className={cn('flex gap-1.5', classes?.filterMenuActions)}>
+                                              <button
+                                                onClick={() => handleApplyFilter(column.id)}
+                                                className="flex-1 px-2 py-1.5 rounded text-[11px] font-bold bg-gradient-to-r from-copper to-copper-dark text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                                              >
+                                                Apply
+                                              </button>
+                                              {isFiltered && (
+                                                <button
+                                                  onClick={() => handleClearFilter(column.id)}
+                                                  className="px-2 py-1.5 rounded text-[11px] font-bold bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70 active:scale-[0.98] transition-all"
+                                                >
+                                                  Clear
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </DropdownMenu.SubContent>
+                                    </DropdownMenu.Portal>
+                                  </DropdownMenu.Sub>
+                                ) : undefined,
+                                hideColumn: (
+                                  <DropdownMenu.Item
+                                    className={cn(
+                                      'flex items-center gap-2 px-2.5 py-1.5 rounded',
+                                      'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                      'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                      classes?.columnMenuItem
+                                    )}
+                                    onSelect={() => {
+                                      toggleColumnVisibility(column.id, false);
+                                      onColumnAction?.('hide', column.id);
+                                    }}
+                                  >
+                                    <EyeOff className="w-3 h-3 text-charcoal/60" />
+                                    <span>Hide Column</span>
+                                  </DropdownMenu.Item>
+                                ),
+                              },
+                              onClose: () => {},
+                            })}
+                          </>
+                        ) : (
+                          <>
+                            {/* Filter option in menu */}
+                            {enableFiltering && columnFilteringEnabled && (
+                              <DropdownMenu.Sub>
+                                <DropdownMenu.SubTrigger
+                                  className={cn(
+                                    'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded',
+                                    'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                    'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                    isFiltered && 'text-copper',
+                                    classes?.columnMenuItem
+                                  )}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Filter className={cn('w-3 h-3', isFiltered && 'fill-copper')} />
+                                    <span>Filter</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    {isFiltered && <span className="w-1.5 h-1.5 bg-copper rounded-full" />}
+                                    <ChevronRight className="w-3 h-3 text-charcoal/40" />
+                                  </div>
+                                </DropdownMenu.SubTrigger>
+                                <DropdownMenu.Portal>
+                                  <DropdownMenu.SubContent
+                                    className={cn(
+                                      'z-50 w-60 rounded-lg',
+                                      'bg-gradient-to-br from-ivory via-ivory to-ivory-dark',
+                                      'border-2 border-copper shadow-xl shadow-copper/20',
+                                      'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1',
+                                      classes?.filterMenu
+                                    )}
+                                    sideOffset={8}
+                                  >
+                                    {renderFilterMenu ? (
+                                      renderFilterMenu({
+                                        column,
+                                        filterValue: filterInputValues[column.id] ?? '',
+                                        onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                        onClose: () => {},
+                                        isFiltered: !!isFiltered,
+                                      })
+                                    ) : column.renderFilterMenu ? (
+                                      column.renderFilterMenu({
+                                        column,
+                                        filterValue: filterInputValues[column.id] ?? '',
+                                        onFilterChange: (value) => setFilterInputValues((prev) => ({ ...prev, [column.id]: value })),
+                                        onClose: () => {},
+                                        isFiltered: !!isFiltered,
+                                      })
+                                    ) : (
+                                      <div className="p-2.5 space-y-2.5">
+                                        <div className="flex items-center gap-1.5">
+                                          <Search className="w-3 h-3 text-copper" />
+                                          <span className="text-[10px] font-bold text-charcoal/70 uppercase tracking-wide">
+                                            Filter {column.header}
+                                          </span>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          value={filterInputValues[column.id] ?? ''}
+                                          onChange={(e) => {
+                                            setFilterInputValues((prev) => ({
+                                              ...prev,
+                                              [column.id]: e.target.value,
+                                            }));
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              handleApplyFilter(column.id);
+                                            }
+                                          }}
+                                          placeholder="Type to filter..."
+                                          className={cn(
+                                            'w-full px-2 py-1.5 text-xs',
+                                            'bg-white border border-copper/20 rounded',
+                                            'text-charcoal placeholder:text-charcoal/40',
+                                            'focus:outline-none focus:border-copper focus:ring-2 focus:ring-copper/10',
+                                            'transition-all',
+                                            classes?.filterMenuInput
+                                          )}
+                                          autoFocus
+                                        />
+                                        <div className={cn('flex gap-1.5', classes?.filterMenuActions)}>
+                                          <button
+                                            onClick={() => handleApplyFilter(column.id)}
+                                            className="flex-1 px-2 py-1.5 rounded text-[11px] font-bold bg-gradient-to-r from-copper to-copper-dark text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                                          >
+                                            Apply
+                                          </button>
+                                          {isFiltered && (
+                                            <button
+                                              onClick={() => handleClearFilter(column.id)}
+                                              className="px-2 py-1.5 rounded text-[11px] font-bold bg-charcoal/5 hover:bg-charcoal/10 text-charcoal/70 active:scale-[0.98] transition-all"
+                                            >
+                                              Clear
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </DropdownMenu.SubContent>
+                                </DropdownMenu.Portal>
+                              </DropdownMenu.Sub>
+                            )}
+
+                            {/* Separator */}
+                            {enableFiltering && columnFilteringEnabled && <DropdownMenu.Separator className="h-px bg-gradient-to-r from-transparent via-copper/30 to-transparent my-1" />}
+
+                            {/* Hide Column */}
+                            <DropdownMenu.Item
+                              className={cn(
+                                'flex items-center gap-2 px-2.5 py-1.5 rounded',
+                                'text-xs font-medium text-charcoal cursor-pointer outline-none',
+                                'hover:bg-copper/10 focus:bg-copper/10 transition-colors',
+                                classes?.columnMenuItem
+                              )}
+                              onSelect={() => {
+                                toggleColumnVisibility(column.id, false);
+                                onColumnAction?.('hide', column.id);
+                              }}
+                            >
+                              <EyeOff className="w-3 h-3 text-charcoal/60" />
+                              <span>Hide Column</span>
+                            </DropdownMenu.Item>
+
+                            {/* Custom Column Menu Items */}
+                            {column.columnMenuItems && column.columnMenuItems.length > 0 && (
+                              <>
+                                <DropdownMenu.Separator className="h-px bg-gradient-to-r from-transparent via-copper/30 to-transparent my-1" />
+                                {column.columnMenuItems.map((item) => (
+                                  <MenuItemRenderer
+                                    key={item.id}
+                                    item={item}
+                                    columnId={column.id}
+                                    onColumnAction={onColumnAction}
+                                    classes={classes}
+                                  />
+                                ))}
+                              </>
+                            )}
+
+                            {/* Default Column Menu Items */}
+                            {defaultColumnMenuItems && defaultColumnMenuItems.length > 0 && (
+                              <>
+                                <DropdownMenu.Separator className="h-px bg-gradient-to-r from-transparent via-copper/30 to-transparent my-1" />
+                                {defaultColumnMenuItems.map((item) => (
+                                  <MenuItemRenderer
+                                    key={item.id}
+                                    item={item}
+                                    columnId={column.id}
+                                    onColumnAction={onColumnAction}
+                                    classes={classes}
+                                  />
+                                ))}
+                              </>
+                            )}
+                          </>
+                        )}
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
                 )}
               </div>
               <div className="header-accent" />
@@ -823,6 +1447,8 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           getColumnWidth={getColumnWidth}
           selectedRows={selectedRows}
           onRowClick={onRowClick}
+          onRowMouseDown={onRowMouseDown}
+          onRowMouseEnter={onRowMouseEnter}
           getRowId={getRowId}
           classes={classes}
           renderCell={renderCell}
@@ -847,6 +1473,8 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           getColumnWidth={getColumnWidth}
           selectedRows={selectedRows}
           onRowClick={onRowClick}
+          onRowMouseDown={onRowMouseDown}
+          onRowMouseEnter={onRowMouseEnter}
           getRowId={getRowId}
           classes={classes}
           renderCell={renderCell}
@@ -893,6 +1521,8 @@ function VirtualizedBody<T extends Record<string, any>>({
   getColumnWidth,
   selectedRows,
   onRowClick,
+  onRowMouseDown,
+  onRowMouseEnter,
   getRowId,
   classes,
   renderCell,
@@ -1031,7 +1661,9 @@ function VirtualizedBody<T extends Record<string, any>>({
                   ...(isSelected && tssToInlineStyles(classes?.selectedRowStyle)),
                   height: `${rowHeight}px`,
                 }}
-                onClick={() => onRowClick?.(item, virtualRow.index)}
+                onClick={(e) => onRowClick?.(item, virtualRow.index, e)}
+                onMouseDown={(e) => onRowMouseDown?.(item, virtualRow.index, e)}
+                onMouseEnter={(e) => onRowMouseEnter?.(item, virtualRow.index, e)}
               >
                 {columns.map((column: ColumnDef<T>, colIndex: number) => {
                   const isCellSelected = enableCellSelection &&
@@ -1122,6 +1754,8 @@ function StandardBody<T extends Record<string, any>>({
   getColumnWidth,
   selectedRows,
   onRowClick,
+  onRowMouseDown,
+  onRowMouseEnter,
   getRowId,
   classes,
   renderCell,
@@ -1204,7 +1838,9 @@ function StandardBody<T extends Record<string, any>>({
                 ...tssToInlineStyles(classes?.rowStyle),
                 ...(isSelected && tssToInlineStyles(classes?.selectedRowStyle)),
               }}
-              onClick={() => onRowClick?.(item, index)}
+              onClick={(e) => onRowClick?.(item, index, e)}
+              onMouseDown={(e) => onRowMouseDown?.(item, index, e)}
+              onMouseEnter={(e) => onRowMouseEnter?.(item, index, e)}
             >
               {columns.map((column: ColumnDef<T>, colIndex: number) => {
                 const isCellSelected = enableCellSelection &&
