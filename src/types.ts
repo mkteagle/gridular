@@ -268,6 +268,7 @@ export interface VirtualizedGridProps<T = any> {
   groupingState?: GroupingState;
   onGroupingChange?: (groupingState: GroupingState) => void;
   renderGroupRow?: (props: GroupRowRenderProps) => ReactNode;
+  hideGroupingUI?: boolean; // Default: false - hides the grouping pills and controls while keeping grouping functionality
 
   // Expandable Rows
   enableExpandableRows?: boolean; // Default: false
@@ -287,7 +288,7 @@ export interface VirtualizedGridProps<T = any> {
   // Custom Rendering
   renderCell?: (props: { value: any; row: T; column: ColumnDef<T>; rowIndex: number }) => ReactNode;
   renderRow?: (props: { row: T; rowIndex: number; cells: ReactNode[]; defaultRow: ReactNode }) => ReactNode;
-  renderHeaderCell?: (props: { column: ColumnDef<T>; columnIndex: number; sortDirection?: SortDirection; defaultHeader: ReactNode }) => ReactNode;
+  renderHeaderCell?: (props: { column: ColumnDef<T>; columnIndex: number; sortDirection?: SortDirection; isFiltered?: boolean }) => ReactNode;
   renderHeader?: (props: { column: ColumnDef<T>; sortDirection?: SortDirection }) => ReactNode;
   renderSortIcon?: (props: { isSorted: boolean; sortDirection?: SortDirection }) => ReactNode;
   renderFilterIcon?: (props: { isFiltered: boolean }) => ReactNode;

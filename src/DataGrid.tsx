@@ -206,6 +206,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   groupingState: controlledGroupingState,
   onGroupingChange,
   renderGroupRow,
+  hideGroupingUI = false,
 
   // Expandable Rows
   enableExpandableRows = false,
@@ -225,6 +226,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   // Custom Rendering
   renderCell,
   renderHeader: _renderHeader,
+  renderHeaderCell,
   renderSortIcon: _renderSortIcon,
   renderFilterIcon: _renderFilterIcon,
 
@@ -679,11 +681,11 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
       style={tssToInlineStyles(classes?.containerStyle)}
     >
       {/* Toolbar with controls */}
-      {(enableGrouping || !hideColumnManager) && (
+      {((enableGrouping && !hideGroupingUI) || !hideColumnManager) && (
         <div className="flex items-center justify-between gap-4 mb-4 px-4 pt-4">
           {/* Left side - active grouping pills */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {enableGrouping && groupingState.groupByColumns.length > 0 && (
+            {enableGrouping && !hideGroupingUI && groupingState.groupByColumns.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Grouped by:</span>
                 {groupingState.groupByColumns.map((columnId) => {
@@ -721,7 +723,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
 
           {/* Right side - control buttons */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {enableGrouping && !hideGroupControls && (
+            {enableGrouping && !hideGroupControls && !hideGroupingUI && (
               <GroupManager
                 columns={propColumns}
                 groupByColumns={groupingState.groupByColumns}
@@ -776,14 +778,23 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
               onDrop={(e) => handleDrop(e, column.id)}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex items-center justify-between gap-1.5 w-full">
-                <div
-                  className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
-                  onClick={() => handleSort(column.id)}
-                >
-                  <span className="header-text truncate">{column.header}</span>
-                  {enableSorting && renderSortIconDefault(column)}
-                </div>
+              {renderHeaderCell ? (
+                renderHeaderCell({
+                  column,
+                  columnIndex: index,
+                  sortDirection: sortState?.column === column.id ? sortState.direction : undefined,
+                  isFiltered: !!isFiltered,
+                })
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-1.5 w-full">
+                    <div
+                      className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                      onClick={() => handleSort(column.id)}
+                    >
+                      <span className="header-text truncate">{column.header}</span>
+                      {enableSorting && renderSortIconDefault(column)}
+                    </div>
 
                 {/* Standalone Filter Button (when overflow menu is disabled) */}
                 {enableFiltering && columnFilteringEnabled && !enableColumnMenu && !column.enableColumnMenu && (
@@ -1430,6 +1441,8 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
                   document.addEventListener('mouseup', handleMouseUp);
                 }}
                 />
+              )}
+                </>
               )}
             </div>
           );
