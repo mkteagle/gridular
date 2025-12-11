@@ -135,6 +135,10 @@ export interface GridClasses {
   selectedCell?: string;
   selectedCellStyle?: CSSObject;
 
+  // Expandable Rows
+  expandedRow?: string;
+  expandedRowStyle?: CSSObject;
+
   // Pagination
   pagination?: string;
   paginationStyle?: CSSObject;
@@ -275,6 +279,7 @@ export interface VirtualizedGridProps<T = any> {
   expandedRows?: Record<string, boolean>;
   onExpandedRowsChange?: (expandedRows: Record<string, boolean>) => void;
   renderExpandedRow?: (row: T) => ReactNode;
+  expandedRowHeight?: number; // Default: 200 - height added when row is expanded
 
   // UI State
   isLoading?: boolean;

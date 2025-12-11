@@ -213,6 +213,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   expandedRows: controlledExpandedRows,
   onExpandedRowsChange,
   renderExpandedRow,
+  expandedRowHeight = 200,
 
   // UI State
   isLoading: _isLoading = false,
@@ -1472,6 +1473,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           expandedRows={expandedRows}
           onToggleRowExpand={handleToggleRowExpand}
           renderExpandedRow={renderExpandedRow}
+          expandedRowHeight={expandedRowHeight}
           enableGrouping={enableGrouping}
           onToggleGroupExpand={handleToggleGroupExpand}
           groupingState={groupingState}
@@ -1546,6 +1548,7 @@ function VirtualizedBody<T extends Record<string, any>>({
   expandedRows,
   onToggleRowExpand,
   renderExpandedRow,
+  expandedRowHeight,
   enableGrouping,
   onToggleGroupExpand,
   groupingState,
@@ -1562,7 +1565,7 @@ function VirtualizedBody<T extends Record<string, any>>({
       const rowId = getRowId(item, index);
       // If this row is expanded, estimate a larger size
       if (enableExpandableRows && expandedRows[rowId] && renderExpandedRow) {
-        return rowHeight + 200;
+        return rowHeight + expandedRowHeight;
       }
       return rowHeight;
     },
@@ -1647,6 +1650,8 @@ function VirtualizedBody<T extends Record<string, any>>({
           const isSelected = selectedRows[rowId];
           const isExpanded = expandedRows[rowId];
 
+          const estimatedHeight = isExpanded ? rowHeight + expandedRowHeight : rowHeight;
+
           return (
             <div
               key={virtualRow.key}
@@ -1657,6 +1662,7 @@ function VirtualizedBody<T extends Record<string, any>>({
                 top: 0,
                 left: 0,
                 width: '100%',
+                minHeight: `${estimatedHeight}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
@@ -1743,14 +1749,8 @@ function VirtualizedBody<T extends Record<string, any>>({
                 <div className="row-shimmer" />
               </div>
 
-              {/* Expanded row content */}
-              {enableExpandableRows && isExpanded && renderExpandedRow && (
-                <div className="border-t bg-gray-50 dark:bg-gray-800">
-                  <div className="px-4 py-3 text-gray-900 dark:text-gray-100">
-                    {renderExpandedRow(item)}
-                  </div>
-                </div>
-              )}
+              {/* Expanded row content - render function has full control */}
+              {enableExpandableRows && isExpanded && renderExpandedRow && renderExpandedRow(item)}
             </div>
           );
         })}
@@ -1920,17 +1920,8 @@ function StandardBody<T extends Record<string, any>>({
               <div className="row-shimmer" />
             </div>
 
-            {/* Expanded row content */}
-            {enableExpandableRows && isExpanded && renderExpandedRow && (
-              <div
-                key={`${rowId}-expanded`}
-                className="border-b bg-gray-50 dark:bg-gray-800"
-              >
-                <div className="px-4 py-3 bg-white dark:bg-gray-800 border-t text-gray-900 dark:text-gray-100">
-                  {renderExpandedRow(item as T)}
-                </div>
-              </div>
-            )}
+            {/* Expanded row content - render function has full control */}
+            {enableExpandableRows && isExpanded && renderExpandedRow && renderExpandedRow(item as T)}
           </>
         );
       })}

@@ -163,3 +163,124 @@ export const ExpandedWithVirtualization: Story = {
     );
   },
 };
+
+export const CustomStyledExpanded: Story = {
+  render: () => {
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+    const data = useMemo(() => generatePersonData(50), []);
+
+    return (
+      <div style={{ height: '700px' }}>
+        <div className="mb-4 p-4 bg-white rounded-lg shadow">
+          <h3 className="font-ui text-lg font-semibold text-charcoal mb-2">Fully Custom Styled Expansion</h3>
+          <p className="font-ui text-sm text-gray-600">
+            Complete control over expanded content styling - render whatever the hell you want!
+          </p>
+        </div>
+        <DataGrid
+          gridId="custom-styled-expanded"
+          columns={peopleColumns}
+          data={data}
+          enableExpandableRows
+          expandedRows={expandedRows}
+          onExpandedRowsChange={setExpandedRows}
+          expandedRowHeight={300}
+          renderExpandedRow={(row) => (
+            <div
+              style={{
+                padding: '24px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderTop: '2px solid #b87333',
+                color: 'white',
+                minHeight: '250px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+                  {row.name}
+                </h3>
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '12px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                  }}
+                >
+                  {row.department}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                <div
+                  style={{
+                    padding: '16px',
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '4px' }}>
+                    📧 Email
+                  </div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>{row.email}</div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '16px',
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '4px' }}>
+                    💰 Salary
+                  </div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                    ${row.salary.toLocaleString()}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '16px',
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '4px' }}>
+                    ⭐ Performance
+                  </div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                    {row.performance}/5.0
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 'auto',
+                  paddingTop: '16px',
+                  borderTop: '1px solid rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.875rem',
+                }}
+              >
+                <span>📅 Joined: {row.joinDate}</span>
+                <span>📊 {row.projects} Active Projects</span>
+              </div>
+            </div>
+          )}
+          virtualizationThreshold={20}
+        />
+      </div>
+    );
+  },
+};
