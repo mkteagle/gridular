@@ -1,6 +1,6 @@
 {
   "name": "gridular",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A high-performance virtualized React data grid with grouping, sorting, filtering, and comprehensive customization",
   "type": "module",
   "main": "./dist/virtualized-grid.js",
