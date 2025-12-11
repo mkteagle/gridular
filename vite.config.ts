@@ -22,7 +22,7 @@ export default defineConfig({
       fileName: () => 'virtualized-grid.js'
     },
     rollupOptions: {
-      external: ['react', 'react-dom', '@tanstack/react-virtual']
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@tanstack/react-virtual']
     }
   },
   test: {
