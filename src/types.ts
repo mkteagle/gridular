@@ -293,6 +293,7 @@ export interface VirtualizedGridProps<T = any> {
   // Custom Rendering
   renderCell?: (props: { value: any; row: T; column: ColumnDef<T>; rowIndex: number }) => ReactNode;
   renderRow?: (props: { row: T; rowIndex: number; cells: ReactNode[]; defaultRow: ReactNode }) => ReactNode;
+  renderRowComponent?: (props: import('./components/DataGridRow').DataGridRowProps<T>) => ReactNode;
   renderHeaderCell?: (props: { column: ColumnDef<T>; columnIndex: number; sortDirection?: SortDirection; isFiltered?: boolean }) => ReactNode;
   renderHeader?: (props: { column: ColumnDef<T>; sortDirection?: SortDirection }) => ReactNode;
   renderSortIcon?: (props: { isSorted: boolean; sortDirection?: SortDirection }) => ReactNode;

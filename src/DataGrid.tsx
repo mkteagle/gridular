@@ -226,6 +226,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
 
   // Custom Rendering
   renderCell,
+  renderRowComponent,
   renderHeader: _renderHeader,
   renderHeaderCell,
   renderSortIcon: _renderSortIcon,
@@ -1466,6 +1467,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           getRowId={getRowId}
           classes={classes}
           renderCell={renderCell}
+          renderRowComponent={renderRowComponent}
           enableCellSelection={enableCellSelection}
           selectedCell={selectedCell}
           onCellSelect={handleCellSelect}
@@ -1493,6 +1495,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           getRowId={getRowId}
           classes={classes}
           renderCell={renderCell}
+          renderRowComponent={renderRowComponent}
           enableCellSelection={enableCellSelection}
           selectedCell={selectedCell}
           onCellSelect={handleCellSelect}
@@ -1541,6 +1544,7 @@ function VirtualizedBody<T extends Record<string, any>>({
   getRowId,
   classes,
   renderCell,
+  renderRowComponent,
   enableCellSelection,
   selectedCell,
   onCellSelect,
@@ -1651,6 +1655,47 @@ function VirtualizedBody<T extends Record<string, any>>({
           const isExpanded = expandedRows[rowId];
 
           const estimatedHeight = isExpanded ? rowHeight + expandedRowHeight : rowHeight;
+
+          // Use custom row component if provided
+          if (renderRowComponent) {
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  minHeight: `${estimatedHeight}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {renderRowComponent({
+                  row: item,
+                  rowIndex: virtualRow.index,
+                  rowId,
+                  columns,
+                  isSelected,
+                  isExpanded,
+                  enableExpandableRows,
+                  enableCellSelection,
+                  selectedCell: enableCellSelection && selectedCell?.rowId === rowId ? selectedCell?.columnId : undefined,
+                  classes,
+                  totalWidth,
+                  getColumnWidth,
+                  renderCell,
+                  onRowClick: (row: T, e: React.MouseEvent) => onRowClick?.(row, virtualRow.index, e),
+                  onRowMouseDown: (row: T, e: React.MouseEvent) => onRowMouseDown?.(row, virtualRow.index, e),
+                  onRowMouseEnter: (row: T, e: React.MouseEvent) => onRowMouseEnter?.(row, virtualRow.index, e),
+                  onToggleExpand: onToggleRowExpand,
+                  onCellSelect,
+                  renderExpandedRow,
+                })}
+              </div>
+            );
+          }
 
           return (
             <div
@@ -1772,6 +1817,7 @@ function StandardBody<T extends Record<string, any>>({
   getRowId,
   classes,
   renderCell,
+  renderRowComponent,
   enableCellSelection,
   selectedCell,
   onCellSelect,
@@ -1835,6 +1881,35 @@ function StandardBody<T extends Record<string, any>>({
         const rowId = (item as any).__skeleton ? (item as any).__id : getRowId(item, index);
         const isSelected = selectedRows[rowId];
         const isExpanded = expandedRows[rowId];
+
+        // Use custom row component if provided
+        if (renderRowComponent) {
+          return (
+            <div key={rowId}>
+              {renderRowComponent({
+                row: item as T,
+                rowIndex: index,
+                rowId,
+                columns,
+                isSelected,
+                isExpanded,
+                enableExpandableRows,
+                enableCellSelection,
+                selectedCell: enableCellSelection && selectedCell?.rowId === rowId ? selectedCell?.columnId : undefined,
+                classes,
+                totalWidth,
+                getColumnWidth,
+                renderCell,
+                onRowClick: (row: T, e: React.MouseEvent) => onRowClick?.(row, index, e),
+                onRowMouseDown: (row: T, e: React.MouseEvent) => onRowMouseDown?.(row, index, e),
+                onRowMouseEnter: (row: T, e: React.MouseEvent) => onRowMouseEnter?.(row, index, e),
+                onToggleExpand: onToggleRowExpand,
+                onCellSelect,
+                renderExpandedRow,
+              })}
+            </div>
+          );
+        }
 
         return (
           <>
