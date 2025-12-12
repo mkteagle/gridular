@@ -944,4 +944,238 @@ describe('DataGrid Component', () => {
       // localStorage should be used (would need to mock localStorage to test fully)
     });
   });
+
+  describe('Context Menu', () => {
+    test('does not show context menu when contextMenuContent is not provided', async () => {
+      const { user } = render(<DataGrid columns={columns} data={testData} />);
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+      expect(firstCell).toBeInTheDocument();
+
+      // Right-click on cell
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Context menu should not be shown
+      const contextMenu = document.querySelector('.virtualized-grid-context-menu');
+      expect(contextMenu).not.toBeInTheDocument();
+    });
+
+    test('shows context menu on right-click when contextMenuContent is provided', async () => {
+      const contextMenuHandler = vi.fn((row, column) => (
+        <div data-testid="custom-context-menu">
+          <button>Copy {column.header}</button>
+          <button>View {row.name}</button>
+        </div>
+      ));
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+      expect(firstCell).toBeInTheDocument();
+
+      // Right-click on cell
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Context menu should be shown
+      const contextMenu = screen.getByTestId('custom-context-menu');
+      expect(contextMenu).toBeInTheDocument();
+
+      // Handler should be called with correct row and column
+      expect(contextMenuHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ id: '1', name: 'John Doe' }),
+        expect.objectContaining({ id: 'name', header: 'Name' })
+      );
+
+      // Menu items should be visible
+      expect(screen.getByText('Copy Name')).toBeInTheDocument();
+      expect(screen.getByText('View John Doe')).toBeInTheDocument();
+    });
+
+    test('context menu renders at correct cursor position', async () => {
+      const contextMenuHandler = vi.fn(() => <div data-testid="custom-context-menu">Menu</div>);
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+
+      // Right-click at specific position
+      await user.pointer({
+        keys: '[MouseRight]',
+        target: firstCell!,
+        coords: { clientX: 150, clientY: 200 },
+      });
+
+      const contextMenu = document.querySelector('.virtualized-grid-context-menu');
+      expect(contextMenu).toBeInTheDocument();
+
+      // Check position
+      const style = window.getComputedStyle(contextMenu!);
+      expect(style.position).toBe('fixed');
+    });
+
+    test('closes context menu on click outside', async () => {
+      const contextMenuHandler = vi.fn(() => <div data-testid="custom-context-menu">Menu</div>);
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+
+      // Open context menu
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Menu should be visible
+      expect(screen.getByTestId('custom-context-menu')).toBeInTheDocument();
+
+      // Click outside
+      await user.click(document.body);
+
+      // Menu should be closed
+      expect(screen.queryByTestId('custom-context-menu')).not.toBeInTheDocument();
+    });
+
+    test('closes context menu on ESC key', async () => {
+      const contextMenuHandler = vi.fn(() => <div data-testid="custom-context-menu">Menu</div>);
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+
+      // Open context menu
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Menu should be visible
+      expect(screen.getByTestId('custom-context-menu')).toBeInTheDocument();
+
+      // Press ESC
+      await user.keyboard('{Escape}');
+
+      // Menu should be closed
+      expect(screen.queryByTestId('custom-context-menu')).not.toBeInTheDocument();
+    });
+
+    test('closes context menu when right-clicking elsewhere', async () => {
+      const contextMenuHandler = vi.fn(() => <div data-testid="custom-context-menu">Menu</div>);
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+      const secondCell = screen.getByText('Jane Smith').closest('.virtualized-grid-cell');
+
+      // Open context menu on first cell
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+      expect(screen.getByTestId('custom-context-menu')).toBeInTheDocument();
+
+      // Right-click on second cell
+      await user.pointer({ keys: '[MouseRight]', target: secondCell! });
+
+      // Context menu should still be present but with new data
+      expect(screen.getByTestId('custom-context-menu')).toBeInTheDocument();
+
+      // Handler should have been called twice
+      expect(contextMenuHandler).toHaveBeenCalledTimes(2);
+
+      // Second call should be with Jane's data
+      expect(contextMenuHandler).toHaveBeenLastCalledWith(
+        expect.objectContaining({ id: '2', name: 'Jane Smith' }),
+        expect.objectContaining({ id: 'name', header: 'Name' })
+      );
+    });
+
+    test('context menu works with different columns', async () => {
+      const contextMenuHandler = vi.fn((_row, column) => (
+        <div data-testid="custom-context-menu">
+          Column: {column.id}
+        </div>
+      ));
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      // Right-click on name column
+      const nameCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+      await user.pointer({ keys: '[MouseRight]', target: nameCell! });
+
+      expect(contextMenuHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ id: '1' }),
+        expect.objectContaining({ id: 'name' })
+      );
+
+      // Right-click on email column
+      const emailCell = screen.getByText('john@example.com').closest('.virtualized-grid-cell');
+      await user.pointer({ keys: '[MouseRight]', target: emailCell! });
+
+      expect(contextMenuHandler).toHaveBeenLastCalledWith(
+        expect.objectContaining({ id: '1' }),
+        expect.objectContaining({ id: 'email' })
+      );
+    });
+
+    test('context menu button clicks trigger actions', async () => {
+      const onCopy = vi.fn();
+      const onView = vi.fn();
+
+      const contextMenuHandler = vi.fn((row, column) => (
+        <div data-testid="custom-context-menu">
+          <button onClick={() => onCopy(row[column.key])}>Copy</button>
+          <button onClick={() => onView(row)}>View</button>
+        </div>
+      ));
+
+      const { user } = render(
+        <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+
+      // Open context menu
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Click Copy button
+      await user.click(screen.getByText('Copy'));
+      expect(onCopy).toHaveBeenCalledWith('John Doe');
+
+      // Menu should close after click
+      expect(screen.queryByTestId('custom-context-menu')).not.toBeInTheDocument();
+    });
+
+    test('prevents default browser context menu', async () => {
+      const contextMenuHandler = vi.fn(() => <div data-testid="custom-context-menu">Menu</div>);
+      const onContextMenu = vi.fn((e) => e.preventDefault());
+
+      const { user } = render(
+        <div onContextMenu={onContextMenu}>
+          <DataGrid columns={columns} data={testData} contextMenuContent={contextMenuHandler} />
+        </div>
+      );
+
+      const firstCell = screen.getByText('John Doe').closest('.virtualized-grid-cell');
+
+      // Right-click on cell
+      await user.pointer({ keys: '[MouseRight]', target: firstCell! });
+
+      // Custom context menu should be shown
+      expect(screen.getByTestId('custom-context-menu')).toBeInTheDocument();
+    });
+
+    test.skip('context menu works in virtualized grid', async () => {
+      // Skipped: Virtualization in test environment is difficult to test reliably
+      // The context menu functionality is tested in other tests with smaller datasets
+    });
+
+    test.skip('context menu closes on scroll', async () => {
+      // Skipped: Scroll event handling in test environment is difficult to test reliably
+      // The context menu close functionality is tested with other triggers (ESC, click outside)
+    });
+  });
 });

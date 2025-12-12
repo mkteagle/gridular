@@ -1,4 +1,5 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, X, Filter, Search, MoreVertical, EyeOff } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
@@ -239,6 +240,9 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   getRowId = (row) => String((row as any).id),
   onScroll,
 
+  // Context Menu
+  contextMenuContent,
+
   // Advanced
   gridId = 'default-grid',
   hideColumnManager = false,
@@ -279,6 +283,21 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
   // Filter UI state
   const [openFilterPopovers, setOpenFilterPopovers] = useState<Record<string, boolean>>({});
   const [filterInputValues, setFilterInputValues] = useState<Record<string, string>>({});
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    isOpen: boolean;
+    x: number;
+    y: number;
+    row: T | null;
+    column: ColumnDef<T> | null;
+  }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    row: null,
+    column: null,
+  });
 
   // Use controlled or uncontrolled state
   const sortState = controlledSortState !== undefined ? controlledSortState : internalSortState;
@@ -460,6 +479,56 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
     },
     [onCellSelect]
   );
+
+  // Context menu handlers
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent, row: T, column: ColumnDef<T>) => {
+      if (!contextMenuContent) return;
+
+      event.preventDefault();
+      setContextMenu({
+        isOpen: true,
+        x: event.clientX,
+        y: event.clientY,
+        row,
+        column,
+      });
+    },
+    [contextMenuContent]
+  );
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu({
+      isOpen: false,
+      x: 0,
+      y: 0,
+      row: null,
+      column: null,
+    });
+  }, []);
+
+  // Close context menu on click outside, ESC key, or scroll
+  useEffect(() => {
+    if (!contextMenu.isOpen) return;
+
+    const handleClickOutside = () => handleCloseContextMenu();
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCloseContextMenu();
+    };
+    const handleScroll = () => handleCloseContextMenu();
+
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('contextmenu', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('contextmenu', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [contextMenu.isOpen, handleCloseContextMenu]);
 
   const handleResetPreferences = useCallback(() => {
     resetPreferences();
@@ -1515,6 +1584,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           groupingState={groupingState}
           renderGroupRow={renderGroupRow}
           onScroll={onScroll}
+          onContextMenu={handleContextMenu}
         />
       ) : (
         <StandardBody
@@ -1541,6 +1611,7 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
           onToggleGroupExpand={handleToggleGroupExpand}
           groupingState={groupingState}
           renderGroupRow={renderGroupRow}
+          onContextMenu={handleContextMenu}
         />
       )}
 
@@ -1559,6 +1630,26 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
 
       {/* Grain overlay */}
       <div className="grain-overlay" />
+
+      {/* Context Menu Portal - render outside grid to avoid positioning issues */}
+      {contextMenu.isOpen && contextMenu.row && contextMenu.column && typeof document !== 'undefined' && createPortal(
+        <div
+          className="virtualized-grid-context-menu"
+          style={{
+            position: 'fixed',
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+            zIndex: 9999,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCloseContextMenu();
+          }}
+        >
+          {contextMenuContent?.(contextMenu.row, contextMenu.column)}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -1592,6 +1683,7 @@ function VirtualizedBody<T extends Record<string, any>>({
   groupingState,
   renderGroupRow,
   onScroll,
+  onContextMenu,
 }: any) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -1789,6 +1881,12 @@ function VirtualizedBody<T extends Record<string, any>>({
                           onCellSelect(rowId, column.id);
                         }
                       }}
+                      onContextMenu={(e) => {
+                        if (onContextMenu) {
+                          e.stopPropagation();
+                          onContextMenu(e, item, column);
+                        }
+                      }}
                     >
                       <div className="cell-content">
                         {/* Show skeleton if this is a skeleton row */}
@@ -1863,6 +1961,7 @@ function StandardBody<T extends Record<string, any>>({
   onToggleGroupExpand,
   groupingState,
   renderGroupRow,
+  onContextMenu,
 }: any) {
   return (
     <div className={cn('virtualized-grid-body', classes?.body)} style={{ width: totalWidth }}>
@@ -1988,6 +2087,12 @@ function StandardBody<T extends Record<string, any>>({
                       if (enableCellSelection) {
                         e.stopPropagation();
                         onCellSelect(rowId, column.id);
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      if (onContextMenu) {
+                        e.stopPropagation();
+                        onContextMenu(e, item, column);
                       }
                     }}
                   >
