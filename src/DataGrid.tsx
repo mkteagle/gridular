@@ -781,12 +781,46 @@ export function DataGrid<T extends Record<string, any> = Record<string, any>>({
               onDragEnd={handleDragEnd}
             >
               {renderHeaderCell ? (
-                renderHeaderCell({
-                  column,
-                  columnIndex: index,
-                  sortDirection: sortState?.column === column.id ? sortState.direction : undefined,
-                  isFiltered: !!isFiltered,
-                })
+                <>
+                  {renderHeaderCell({
+                    column,
+                    columnIndex: index,
+                    sortDirection: sortState?.column === column.id ? sortState.direction : undefined,
+                    isFiltered: !!isFiltered,
+                  })}
+                  {/* Resize handle - always render even with custom header */}
+                  {enableColumnResize && (
+                    <div
+                      className={cn(
+                        'absolute right-0 top-0 bottom-0 w-2 cursor-col-resize',
+                        'hover:border-r-2 hover:border-copper transition-all',
+                        'group',
+                        classes?.resizeHandle
+                      )}
+                      style={tssToInlineStyles(classes?.resizeHandleStyle)}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startWidth = getColumnWidth(column);
+
+                        const handleMouseMove = (e: MouseEvent) => {
+                          const diff = e.clientX - startX;
+                          const newWidth = Math.max(50, startWidth + diff);
+                          handleColumnWidthChange(column.id, newWidth);
+                        };
+
+                        const handleMouseUp = () => {
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
+
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                      }}
+                    />
+                  )}
+                </>
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-1.5 w-full">
@@ -1723,7 +1757,7 @@ function VirtualizedBody<T extends Record<string, any>>({
                 style={{
                   ...tssToInlineStyles(classes?.rowStyle),
                   ...(isSelected && tssToInlineStyles(classes?.selectedRowStyle)),
-                  height: `${rowHeight}px`,
+                  minHeight: `${rowHeight}px`,
                 }}
                 onClick={(e) => onRowClick?.(item, virtualRow.index, e)}
                 onMouseDown={(e) => onRowMouseDown?.(item, virtualRow.index, e)}
