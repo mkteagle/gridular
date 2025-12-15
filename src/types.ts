@@ -202,6 +202,10 @@ export interface GridClasses {
   filterIconStyle?: CSSObject;
   filterIconActive?: string;
   filterIconActiveStyle?: CSSObject;
+
+  // Skeleton loading
+  skeleton?: string;
+  skeletonStyle?: CSSObject;
 }
 
 export interface VirtualizedGridProps<T = any> {

@@ -237,6 +237,8 @@
 
 /* Skeleton Loading */
 .skeleton-shimmer {
+  width: 80%;
+  height: 16px;
   background: linear-gradient(90deg, var(--vg-ivory-dark) 0%, var(--vg-ivory) 50%, var(--vg-ivory-dark) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;

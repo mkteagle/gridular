@@ -8,6 +8,7 @@ import { cn, tssToInlineStyles } from './lib/utils';
 import { Pagination } from './Pagination';
 import { ColumnManager } from './components/ColumnManager';
 import { GroupManager } from './components/GroupManager';
+import { Skeleton } from './components/Skeleton';
 import { useGridPersistence } from './hooks/useGridPersistence';
 import { useDataGrouping, GroupRow } from './hooks/useDataGrouping';
 import type {
@@ -1891,7 +1892,7 @@ function VirtualizedBody<T extends Record<string, any>>({
                       <div className="cell-content">
                         {/* Show skeleton if this is a skeleton row */}
                         {(item as any).__skeleton ? (
-                          <div className="skeleton-shimmer" style={{ width: '80%', height: '16px', borderRadius: '4px' }} />
+                          <Skeleton className={classes?.skeleton} />
                         ) : (
                           <>
                             {/* Expand button in first cell - only show if renderExpandedRow exists */}
@@ -2099,7 +2100,7 @@ function StandardBody<T extends Record<string, any>>({
                     <div className="cell-content">
                       {/* Show skeleton if this is a skeleton row */}
                       {(item as any).__skeleton ? (
-                        <div className="skeleton-shimmer" style={{ width: '80%', height: '16px', borderRadius: '4px' }} />
+                        <Skeleton className={classes?.skeleton} />
                       ) : (
                         <>
                           {/* Expand button in first cell - only show if renderExpandedRow exists */}
