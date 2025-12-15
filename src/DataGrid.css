@@ -236,7 +236,7 @@
 } */
 
 /* Skeleton Loading */
-.skeleton-shimmer {
+.cell-content .skeleton-shimmer {
   width: 80%;
   height: 16px;
   background: linear-gradient(90deg, var(--vg-ivory-dark) 0%, var(--vg-ivory) 50%, var(--vg-ivory-dark) 100%);
